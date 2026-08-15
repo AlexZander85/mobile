@@ -3,13 +3,12 @@ import 'package:dartchess/dartchess.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lichess_mobile/src/widgets/board.dart';
 
-GameData _game(String fen, Side sideToMove) =>
-    GameData(
-      fen: fen,
-      playerSide: PlayerSide.white,
-      sideToMove: sideToMove,
-      validMoves: const <Square, Set<Square>>{},
-    );
+GameData _game(String fen, Side sideToMove) => GameData(
+  fen: fen,
+  playerSide: PlayerSide.white,
+  sideToMove: sideToMove,
+  validMoves: const <Square, Set<Square>>{},
+);
 
 NormalMove _move(Square from, Square to) => NormalMove(from: from, to: to);
 
@@ -18,9 +17,8 @@ void main() {
     late ChessboardController controller;
 
     setUp(() {
-      controller = ChessboardController(
-        game: _game('7k/8/8/8/8/8/6K1/8 b - - 0 1', Side.black),
-      )..maxPremoveCount = 4;
+      controller = ChessboardController(game: _game('7k/8/8/8/8/8/6K1/8 b - - 0 1', Side.black))
+        ..maxPremoveCount = 4;
     });
 
     tearDown(() => controller.dispose());
