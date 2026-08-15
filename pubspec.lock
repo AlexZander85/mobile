@@ -188,10 +188,11 @@ packages:
   chessground:
     dependency: "direct main"
     description:
-      name: chessground
-      sha256: "1599bfd0a75a0ed1bdb401ad4399c3b185d17a6eb79236b2a5c504a1d8a4e660"
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: "895bb4da756a7137be289265f767ed455d9d3503"
+      resolved-ref: "895bb4da756a7137be289265f767ed455d9d3503"
+      url: "https://github.com/AlexZander85/flutter-chessground.git"
+    source: git
     version: "10.1.1"
   cli_config:
     dependency: transitive

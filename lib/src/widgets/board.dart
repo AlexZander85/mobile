@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:chessground/chessground.dart';
 import 'package:dartchess/dartchess.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lichess_mobile/src/model/common/chess.dart';
 import 'package:lichess_mobile/src/model/settings/board_preferences.dart';
 import 'package:material_ui/material_ui.dart';
@@ -11,7 +12,7 @@ import 'package:material_ui/material_ui.dart';
 /// For a non-interactive board, use [StaticChessboard] instead. To disable user
 /// interaction on this board (e.g. at the end of a game), drive the [controller]
 /// with game data whose `playerSide` is [PlayerSide.none].
-class BoardWidget extends StatelessWidget {
+class BoardWidget extends ConsumerWidget {
   const BoardWidget({
     required this.size,
     required this.orientation,
@@ -46,7 +47,22 @@ class BoardWidget extends StatelessWidget {
   final GlobalKey? boardKey;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final premoveMode = ref.watch(boardPreferencesProvider.select((prefs) => prefs.premoveMode));
+
+    // Keep an already queued line consistent with live preference changes. In
+    // particular, disabling premoves must cancel a pending head immediately so it
+    // cannot execute after the opponent's next move. Switching multiple -> single
+    // is handled by the controller: it keeps only the queue head and restores the
+    // authoritative board; switching single -> multiple turns that head into the
+    // first speculative preview move.
+    ref.listen(boardPreferencesProvider.select((prefs) => prefs.premoveMode), (previous, next) {
+      if (next == PremoveMode.disabled) controller.clearPremoves();
+      controller.maxPremoveCount = next.maxCount;
+    });
+
+    controller.maxPremoveCount = settings.enablePremoves ? premoveMode.maxCount : 1;
+
     final board = Chessboard(
       key: boardKey,
       controller: controller,
@@ -99,24 +115,32 @@ class _ErrorWidget extends StatelessWidget {
   }
 }
 
-/// Executes a pending premove on [ctrl] if it is legal in [position], calling [onMove] via
-/// [scheduleMicrotask] to avoid modifying Riverpod providers inside widget lifecycle callbacks.
-/// Clears the premove if it is illegal.
+/// Executes the head of the pending premove queue if it is legal in [position],
+/// calling [onMove] via [scheduleMicrotask] to avoid modifying Riverpod providers
+/// inside widget lifecycle callbacks.
+///
+/// Only the validated head is consumed. The remaining premoves stay queued and
+/// are reconsidered after the next real opponent move. If the head is illegal,
+/// the whole dependent queue is cleared. A promotion that needs user input also
+/// clears the tail because later premoves cannot safely depend on an unresolved
+/// promotion role.
 void tryExecutePremove(ChessboardController ctrl, Position position, void Function(Move) onMove) {
   final premove = ctrl.premove;
   if (premove == null) return;
-  if (position.isLegal(premove)) {
-    if (premove is NormalMove && isPromotionPawnMove(position, premove)) {
-      ctrl.premove = null;
-      ctrl.pendingPromotion = premove;
-    } else {
-      ctrl.premove = null;
-      scheduleMicrotask(() => onMove(premove));
-    }
-  } else {
-    // Premove became illegal (e.g. after a takeback) — clear it.
-    ctrl.premove = null;
+
+  if (!position.isLegal(premove)) {
+    ctrl.clearPremoves();
+    return;
   }
+
+  if (premove is NormalMove && isPromotionPawnMove(position, premove)) {
+    ctrl.clearPremoves();
+    ctrl.pendingPromotion = premove;
+    return;
+  }
+
+  ctrl.consumePremove();
+  scheduleMicrotask(() => onMove(premove));
 }
 
 /// Builds a [GameData] object for the given position and variant, including legal moves, check status, and crazyhouse drops.
