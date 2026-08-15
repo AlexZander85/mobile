@@ -66,7 +66,11 @@ class _PublicBoardApiTestScreenState extends ConsumerState<PublicBoardApiTestScr
         title: const Text('Multiple premoves • production test'),
         actions: [
           if (authUser != null)
-            IconButton(onPressed: _refreshGames, icon: const Icon(Icons.refresh), tooltip: 'Refresh'),
+            IconButton(
+              onPressed: _refreshGames,
+              icon: const Icon(Icons.refresh),
+              tooltip: 'Refresh',
+            ),
           if (authUser != null)
             IconButton(onPressed: _signOut, icon: const Icon(Icons.logout), tooltip: 'Sign out'),
         ],
@@ -205,7 +209,11 @@ class _CenteredMessage extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(title, style: Theme.of(context).textTheme.headlineSmall, textAlign: TextAlign.center),
+              Text(
+                title,
+                style: Theme.of(context).textTheme.headlineSmall,
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 12),
               Text(body, textAlign: TextAlign.center),
               if (extra != null) extra!,
@@ -478,7 +486,8 @@ class _PremoveModeSelector extends ConsumerWidget {
               ChoiceChip(
                 label: Text(_label(value)),
                 selected: mode == value,
-                onSelected: (_) => ref.read(boardPreferencesProvider.notifier).setPremoveMode(value),
+                onSelected: (_) =>
+                    ref.read(boardPreferencesProvider.notifier).setPremoveMode(value),
               ),
           ],
         ),
