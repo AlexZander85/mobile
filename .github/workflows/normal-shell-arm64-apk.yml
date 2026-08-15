@@ -30,6 +30,7 @@ jobs:
             lib/src/constants.dart \
             lib/src/model/auth/auth_repository.dart \
             lib/src/model/auth/bearer.dart \
+            lib/src/model/lobby/create_game_service.dart \
             lib/src/model/public_board_api/public_board_api.dart \
             lib/src/model/settings/board_preferences.dart \
             lib/src/view/auth/sign_in_options.dart \
@@ -37,6 +38,7 @@ jobs:
             lib/src/view/public_board_api/public_board_api_game_loader_screen.dart \
             lib/src/view/public_board_api/public_board_api_test_screen.dart \
             lib/src/view/settings/board_settings_screen.dart \
+            test/model/lobby/create_game_service_public_board_api_test.dart \
             test/model/public_board_api/public_board_api_test.dart \
             test/model/settings/board_preferences_test.dart \
             test/view/auth/email_login_screen_test.dart
@@ -44,6 +46,8 @@ jobs:
         run: flutter analyze
       - name: Run integration-sensitive tests
         run: |
+          flutter test --dart-define=PUBLIC_BOARD_API_TEST=true test/model/lobby/create_game_service_public_board_api_test.dart
+          flutter test --dart-define=PUBLIC_BOARD_API_TEST=true test/model/lobby/create_game_service_test.dart
           flutter test test/model/public_board_api/public_board_api_test.dart
           flutter test test/model/settings/board_preferences_test.dart
           flutter test test/view/auth/email_login_screen_test.dart
