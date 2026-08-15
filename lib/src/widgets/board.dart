@@ -49,6 +49,21 @@ class BoardWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final premoveMode = ref.watch(boardPreferencesProvider.select((prefs) => prefs.premoveMode));
+
+    // Keep an already queued line consistent with live preference changes. In
+    // particular, disabling premoves must cancel a pending head immediately so it
+    // cannot execute after the opponent's next move. Switching multiple -> single
+    // is handled by the controller: it keeps only the queue head and restores the
+    // authoritative board; switching single -> multiple turns that head into the
+    // first speculative preview move.
+    ref.listen(
+      boardPreferencesProvider.select((prefs) => prefs.premoveMode),
+      (previous, next) {
+        if (next == PremoveMode.disabled) controller.clearPremoves();
+        controller.maxPremoveCount = next.maxCount;
+      },
+    );
+
     controller.maxPremoveCount = settings.enablePremoves ? premoveMode.maxCount : 1;
 
     final board = Chessboard(
