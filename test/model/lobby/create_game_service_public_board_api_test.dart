@@ -56,15 +56,12 @@ void main() {
     );
     addTearDown(container.dispose);
 
-    final response = await container.read(createGameServiceProvider).newLobbyGame(
-      const GameSeek(clock: (Duration(minutes: 10), Duration.zero), rated: false),
-    );
+    final response = await container
+        .read(createGameServiceProvider)
+        .newLobbyGame(const GameSeek(clock: (Duration(minutes: 10), Duration.zero), rated: false));
 
     expect(response, isA<GameSeekCreated>());
     expect((response as GameSeekCreated).fullId.value, 'abcd1234wxyz');
-    expect(
-      requests.any((r) => r.method == 'POST' && r.url.path == '/api/board/seek'),
-      isTrue,
-    );
+    expect(requests.any((r) => r.method == 'POST' && r.url.path == '/api/board/seek'), isTrue);
   });
 }
