@@ -198,20 +198,12 @@ class _GameLayoutState extends ConsumerState<GameLayout> {
   /// provided, otherwise the one we created.
   ChessboardController? get _controller => widget.controllerParams?.controller ?? _ownController;
 
-  void _applyPremoveMode(PremoveMode mode) {
-    final ctrl = _controller;
-    if (ctrl == null) return;
-    if (!mode.enabled && ctrl.premove != null) ctrl.clearPremoves();
-    ctrl.maxPremoveCount = mode.maxCount;
-  }
-
   @override
   void initState() {
     super.initState();
     if (widget.controllerParams == null) {
       _initController();
     }
-    _applyPremoveMode(ref.read(boardPreferencesProvider).premoveMode);
     _controller?.premoveNotifier.addListener(_onPremoveChanged);
   }
 
@@ -231,7 +223,6 @@ class _GameLayoutState extends ConsumerState<GameLayout> {
     final oldController = old.controllerParams?.controller ?? _ownController;
     if (oldController != _controller) {
       oldController?.premoveNotifier.removeListener(_onPremoveChanged);
-      _applyPremoveMode(ref.read(boardPreferencesProvider).premoveMode);
       _controller?.premoveNotifier.addListener(_onPremoveChanged);
     }
 
@@ -348,10 +339,6 @@ class _GameLayoutState extends ConsumerState<GameLayout> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(
-      boardPreferencesProvider.select((prefs) => prefs.premoveMode),
-      (previous, next) => _applyPremoveMode(next),
-    );
     final boardPrefs = ref.watch(boardPreferencesProvider);
 
     // Board info needed for the layout, derived from whichever path is active.
