@@ -36,5 +36,13 @@ void main() {
       expect(prefs.premoveMode, PremoveMode.multiple);
       expect(prefs.premoveMode.maxCount, kMultiplePremoveLimit);
     });
+
+    test('disabled mode wins over a stale multiple flag', () {
+      final prefs = BoardPrefs.defaults.copyWith(premoves: false, multiplePremoves: true);
+
+      expect(prefs.premoveMode, PremoveMode.disabled);
+      expect(prefs.premoveMode.enabled, isFalse);
+      expect(prefs.premoveMode.maxCount, 1);
+    });
   });
 }
