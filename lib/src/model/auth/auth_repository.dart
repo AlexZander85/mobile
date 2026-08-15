@@ -9,17 +9,21 @@ import 'package:lichess_mobile/src/model/user/user.dart';
 import 'package:lichess_mobile/src/network/http.dart';
 import 'package:logging/logging.dart';
 
-/// Host of the custom URI scheme callback. Must stay in sync with the
+/// Host of the official custom URI scheme callback. Must stay in sync with the
 /// intent-filter for `net.openid.appauth.RedirectUriReceiverActivity` in
 /// `android/app/src/main/AndroidManifest.xml` and the `CFBundleURLSchemes` entry in `ios/Runner/Info.plist`.
 const _kOAuthCustomSchemeCallbackHost = 'login-callback';
 
-/// The custom URI scheme redirect for OAuth.
+/// The OAuth identity is deliberately different in public Board API test mode.
 ///
-/// Custom schemes are more universally supported across Android browsers/OEMs than
-/// HTTPS App Link redirects, so they are used on every platform and host.
-const kOAuthRedirectUri = '$kLichessCustomUriSchemeName://$_kOAuthCustomSchemeCallbackHost';
-const oauthScopes = ['web:mobile'];
+/// `web:mobile` is a concealed, signed scope reserved for the official Lichess mobile release.
+/// Forks instead use a unique public client id and the documented `board:play` scope. Lichess OAuth
+/// supports unregistered public clients with PKCE, so this path needs no client secret.
+const kOAuthRedirectUri = kPublicBoardApiTest
+    ? kPublicBoardApiRedirectUri
+    : '$kLichessCustomUriSchemeName://$_kOAuthCustomSchemeCallbackHost';
+const kOAuthClientId = kPublicBoardApiTest ? kPublicBoardApiOAuthClientId : kLichessClientId;
+const oauthScopes = kPublicBoardApiTest ? ['board:play'] : ['web:mobile'];
 
 /// Thrown when the user dismisses the OAuth session before completing it.
 ///
@@ -73,7 +77,7 @@ class AuthRepository {
     try {
       authResp = await _appAuth.authorizeAndExchangeCode(
         AuthorizationTokenRequest(
-          kLichessClientId,
+          kOAuthClientId,
           kOAuthRedirectUri,
           allowInsecureConnections: kDebugMode,
           serviceConfiguration: AuthorizationServiceConfiguration(
@@ -102,6 +106,8 @@ class AuthRepository {
 
   /// Asks lichess to email a 6 character login code for the [username] account to [email].
   ///
+  /// This flow is retained for the official/dev mobile mode. The public Board API tester uses
+  /// browser PKCE exclusively because the mobile-code endpoints mint official `web:mobile` tokens.
   /// Throws an [EmailLoginRateLimitException] if the request is rate-limited.
   Future<void> requestEmailLoginCode({required String username, required String email}) async {
     final url = lichessUri('/auth/mobile-code/email', {'email': email, 'username': username});
