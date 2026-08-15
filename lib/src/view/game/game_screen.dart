@@ -162,6 +162,13 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           ),
         );
       case AsyncData(value: GameCreatedState(:final createdGameId)):
+        // A lobby seek completes inside this already-mounted GameScreen, so buildRoute cannot
+        // intercept it. In public fork mode hand the freshly paired game to the documented
+        // Board API transport here before any private /play/.../v6 controller is created.
+        if (kPublicBoardApiTest) {
+          return PublicBoardApiGameLoaderScreen(gameId: createdGameId.gameId.value);
+        }
+
         final isRealTimePlayingGame = ref.watch(
           _isRealTimePlayableGameProvider(createdGameId).select((s) => s.value ?? false),
         );
