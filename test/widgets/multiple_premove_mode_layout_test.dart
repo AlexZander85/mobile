@@ -12,12 +12,13 @@ import 'package:material_ui/material_ui.dart';
 
 import '../test_provider_scope.dart';
 
-GameData _game(String fen, Side sideToMove) => GameData(
-  fen: fen,
-  playerSide: PlayerSide.white,
-  sideToMove: sideToMove,
-  validMoves: const <Square, Set<Square>>{},
-);
+GameData _game(String fen, Side sideToMove) =>
+    GameData(
+      fen: fen,
+      playerSide: PlayerSide.white,
+      sideToMove: sideToMove,
+      validMoves: const <Square, Set<Square>>{},
+    );
 
 NormalMove _move(Square from, Square to) => NormalMove(from: from, to: to);
 
