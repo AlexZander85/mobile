@@ -25,12 +25,24 @@ jobs:
         run: flutter pub get
       - name: Code generation
         run: dart run build_runner build
+      - name: Limit Android build to ARM64
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('android/app/build.gradle.kts')
+          s = p.read_text()
+          old = 'abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86_64")'
+          new = 'abiFilters += listOf("arm64-v8a")'
+          if old not in s:
+              raise SystemExit('expected abiFilters line not found')
+          p.write_text(s.replace(old, new))
+          PY
       - name: Build ARM64 debug APK
-        run: flutter build apk --debug --target-platform android-arm64 --split-per-abi
+        run: flutter build apk --debug --target-platform android-arm64
       - name: Upload ARM64 debug APK
         uses: actions/upload-artifact@v7
         with:
           name: lichess-multiple-premoves-arm64-debug-apk
-          path: build/app/outputs/flutter-apk/app-arm64-v8a-debug.apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
           if-no-files-found: error
           retention-days: 7
