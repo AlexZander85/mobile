@@ -54,6 +54,12 @@ class BoardPreferences extends Notifier<BoardPrefs> with PreferencesStorage<Boar
     );
   }
 
+  /// Compatibility helper for callers that still expose the old on/off switch.
+  /// New UI should use [setPremoveMode].
+  Future<void> togglePremoves() async {
+    await save(state.copyWith(premoves: !state.premoves));
+  }
+
   Future<void> toggleConfirmResignAndDraw() async {
     await save(state.copyWith(confirmResignAndDraw: !state.confirmResignAndDraw));
   }
@@ -314,7 +320,7 @@ enum BoardTheme {
   ic('IC', 'ic'),
   green('Green', 'green'),
   marble('Marble', 'marble'),
-  greenPlastic('Green', 'green-plastic'),
+  greenPlastic('Green Plastic', 'green-plastic'),
   grey('Grey', 'grey'),
   metal('Metal', 'metal'),
   olive('Olive', 'olive'),
