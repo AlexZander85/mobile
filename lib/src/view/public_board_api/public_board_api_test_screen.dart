@@ -239,6 +239,7 @@ class PublicBoardGameTestScreen extends ConsumerStatefulWidget {
 
 class _PublicBoardGameTestScreenState extends ConsumerState<PublicBoardGameTestScreen> {
   StreamSubscription<Map<String, dynamic>>? _streamSubscription;
+  Timer? _reconnectTimer;
   ChessboardController? _controller;
   PublicBoardGameState? _authoritative;
   String? _initialFen;
@@ -249,14 +250,31 @@ class _PublicBoardGameTestScreenState extends ConsumerState<PublicBoardGameTestS
   @override
   void initState() {
     super.initState();
+    _connectStream();
+  }
+
+  void _connectStream() {
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
+    _streamSubscription?.cancel();
     _streamSubscription = ref
         .read(publicBoardApiRepositoryProvider)
         .streamGame(widget.game.id)
         .listen(_onBoardApiEvent, onError: _onStreamError, onDone: _onStreamDone);
   }
 
+  void _scheduleReconnect() {
+    if (!mounted || _authoritative?.isPlaying == false || _reconnectTimer != null) return;
+    _reconnectTimer = Timer(const Duration(seconds: 2), () {
+      _reconnectTimer = null;
+      if (mounted) _connectStream();
+    });
+  }
+
   void _onBoardApiEvent(Map<String, dynamic> event) {
     if (!mounted) return;
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
     final type = event['type'];
     try {
       if (type == 'gameFull') {
@@ -358,20 +376,21 @@ class _PublicBoardGameTestScreenState extends ConsumerState<PublicBoardGameTestS
 
   void _onStreamError(Object error, StackTrace stackTrace) {
     if (!mounted) return;
-    setState(() => _error = 'Board API stream: $error');
+    setState(() => _error = 'Соединение с партией потеряно. Переподключаюсь… ($error)');
+    _scheduleReconnect();
   }
 
   void _onStreamDone() {
-    if (!mounted) return;
+    if (!mounted || _authoritative?.isPlaying == false) return;
     setState(() {
-      if (_authoritative?.isPlaying == true && _error == null) {
-        _error = 'Поток партии закрыт сервером.';
-      }
+      _error ??= 'Соединение с партией закрыто. Переподключаюсь…';
     });
+    _scheduleReconnect();
   }
 
   @override
   void dispose() {
+    _reconnectTimer?.cancel();
     _streamSubscription?.cancel();
     _controller?.dispose();
     super.dispose();
