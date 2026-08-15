@@ -148,7 +148,7 @@ class BoardPreferences extends Notifier<BoardPrefs> with PreferencesStorage<Boar
 /// The storage model intentionally keeps the historical [BoardPrefs.premoves]
 /// boolean and adds [BoardPrefs.multiplePremoves]. That makes migration automatic:
 /// an existing install that has `premoves: true` but no new key loads as [single],
-/// while fresh installs use the recommended [multiple] default below.
+/// and fresh installs remain [single] until the user opts into multiple premoves.
 enum PremoveMode {
   multiple,
   single,
@@ -232,7 +232,7 @@ sealed class BoardPrefs with _$BoardPrefs implements Serializable {
     landscapeBoardPosition: LandscapeBoardPosition.left,
     moveListDisplay: true,
     premoves: true,
-    multiplePremoves: true,
+    multiplePremoves: false,
     confirmResignAndDraw: true,
     pieceShiftMethod: PieceShiftMethod.either,
     moveOnRelease: false,
