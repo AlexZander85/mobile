@@ -228,9 +228,10 @@ class _CenteredMessage extends StatelessWidget {
 }
 
 class PublicBoardGameTestScreen extends ConsumerStatefulWidget {
-  const PublicBoardGameTestScreen({required this.game, super.key});
+  const PublicBoardGameTestScreen({required this.game, this.showDiagnostics = true, super.key});
 
   final PublicBoardApiGame game;
+  final bool showDiagnostics;
 
   @override
   ConsumerState<PublicBoardGameTestScreen> createState() => _PublicBoardGameTestScreenState();
@@ -395,11 +396,13 @@ class _PublicBoardGameTestScreenState extends ConsumerState<PublicBoardGameTestS
             : ListView(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _PremoveModeSelector(mode: prefs.premoveMode),
-                  ),
-                  const SizedBox(height: 12),
+                  if (widget.showDiagnostics) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _PremoveModeSelector(mode: prefs.premoveMode),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   LayoutBuilder(
                     builder: (context, constraints) {
                       final size = math.min(constraints.maxWidth, 700.0);
@@ -415,37 +418,38 @@ class _PublicBoardGameTestScreenState extends ConsumerState<PublicBoardGameTestS
                     },
                   ),
                   const SizedBox(height: 12),
-                  AnimatedBuilder(
-                    animation: controller,
-                    builder: (context, _) {
-                      final queue = controller.premoveQueue;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Очередь premove: ${queue.length}',
-                                  style: Theme.of(context).textTheme.titleMedium,
-                                ),
-                                if (queue.isNotEmpty)
-                                  Text(queue.map((move) => move.uci).join(' → ')),
-                                const SizedBox(height: 6),
-                                Text(
-                                  _sendingMove
-                                      ? 'Отправляю один ход серверу…'
-                                      : 'Сервер видит только текущий ход; хвост очереди остаётся на устройстве.',
-                                ),
-                              ],
+                  if (widget.showDiagnostics)
+                    AnimatedBuilder(
+                      animation: controller,
+                      builder: (context, _) {
+                        final queue = controller.premoveQueue;
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Очередь premove: ${queue.length}',
+                                    style: Theme.of(context).textTheme.titleMedium,
+                                  ),
+                                  if (queue.isNotEmpty)
+                                    Text(queue.map((move) => move.uci).join(' → ')),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    _sendingMove
+                                        ? 'Отправляю один ход серверу…'
+                                        : 'Сервер видит только текущий ход; хвост очереди остаётся на устройстве.',
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
+                        );
+                      },
+                    ),
                   if (_error != null)
                     Padding(
                       padding: const EdgeInsets.all(16),
