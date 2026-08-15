@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -21,16 +23,20 @@ void main() {
         playingReads++;
         if (playingReads == 1) return http.Response('{"nowPlaying":[]}', 200);
         return http.Response(
-          '{"nowPlaying":[{'
-          '"gameId":"abcd1234",'
-          '"fullId":"abcd1234wxyz",'
-          '"color":"white",'
-          '"fen":"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",'
-          '"perf":"rapid",'
-          '"speed":"rapid",'
-          '"variant":"standard",'
-          '"isMyTurn":true'
-          '}]}',
+          jsonEncode({
+            'nowPlaying': [
+              {
+                'gameId': 'abcd1234',
+                'fullId': 'abcd1234wxyz',
+                'color': 'white',
+                'fen': 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+                'perf': 'rapid',
+                'speed': 'rapid',
+                'variant': 'standard',
+                'isMyTurn': true,
+              },
+            ],
+          }),
           200,
         );
       }
