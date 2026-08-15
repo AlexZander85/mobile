@@ -43,7 +43,7 @@ void main() {
       expect(controller.premoveQueue, [second]);
     });
 
-    test('clears the complete queue when the authoritative head is illegal', () async {
+    test('clears the dependent queue when the authoritative head is illegal', () async {
       controller
         ..premove = _move(Square.g2, Square.f2)
         ..premove = _move(Square.f2, Square.e2);
