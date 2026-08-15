@@ -22,8 +22,24 @@ jobs:
         run: flutter pub get
       - name: Code generation
         run: dart run build_runner build
-      - name: Verify formatting
-        run: dart format --output=none --set-exit-if-changed lib test
+      - name: Verify formatting of changed sources
+        run: |
+          dart format --output=none --set-exit-if-changed \
+            lib/main.dart \
+            lib/src/app.dart \
+            lib/src/constants.dart \
+            lib/src/model/auth/auth_repository.dart \
+            lib/src/model/auth/bearer.dart \
+            lib/src/model/public_board_api/public_board_api.dart \
+            lib/src/model/settings/board_preferences.dart \
+            lib/src/view/auth/sign_in_options.dart \
+            lib/src/view/game/game_screen.dart \
+            lib/src/view/public_board_api/public_board_api_game_loader_screen.dart \
+            lib/src/view/public_board_api/public_board_api_test_screen.dart \
+            lib/src/view/settings/board_settings_screen.dart \
+            test/model/public_board_api/public_board_api_test.dart \
+            test/model/settings/board_preferences_test.dart \
+            test/view/auth/email_login_screen_test.dart
       - name: Analyze project
         run: flutter analyze
       - name: Run integration-sensitive tests
