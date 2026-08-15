@@ -20,8 +20,7 @@ void main() {
     final requests = <http.Request>[];
     final mockClient = MockClient((request) async {
       requests.add(request);
-      if (request.method == 'GET' &&
-          request.url.path == '/api/account/playing') {
+      if (request.method == 'GET' && request.url.path == '/api/account/playing') {
         playingReads++;
         if (playingReads == 1) return http.Response('{"nowPlaying":[]}', 200);
         return http.Response(
@@ -31,8 +30,7 @@ void main() {
                 'gameId': 'abcd1234',
                 'fullId': 'abcd1234wxyz',
                 'color': 'white',
-                'fen':
-                    'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+                'fen': 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
                 'perf': 'rapid',
                 'speed': 'rapid',
                 'variant': 'standard',
@@ -52,9 +50,7 @@ void main() {
     final container = await makeContainer(
       authUser: fakeAuthUser,
       overrides: {
-        httpClientFactoryProvider: httpClientFactoryProvider.overrideWith((
-          ref,
-        ) {
+        httpClientFactoryProvider: httpClientFactoryProvider.overrideWith((ref) {
           return FakeHttpClientFactory(() => mockClient);
         }),
       },
@@ -63,20 +59,10 @@ void main() {
 
     final response = await container
         .read(createGameServiceProvider)
-        .newLobbyGame(
-          const GameSeek(
-            clock: (Duration(minutes: 10), Duration.zero),
-            rated: false,
-          ),
-        );
+        .newLobbyGame(const GameSeek(clock: (Duration(minutes: 10), Duration.zero), rated: false));
 
     expect(response, isA<GameSeekCreated>());
     expect((response as GameSeekCreated).fullId.value, 'abcd1234wxyz');
-    expect(
-      requests.any(
-        (r) => r.method == 'POST' && r.url.path == '/api/board/seek',
-      ),
-      isTrue,
-    );
+    expect(requests.any((r) => r.method == 'POST' && r.url.path == '/api/board/seek'), isTrue);
   }, skip: !kPublicBoardApiTest);
 }
