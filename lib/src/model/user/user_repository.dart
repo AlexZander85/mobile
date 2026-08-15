@@ -159,7 +159,7 @@ class UserRepository {
     final names = jsonDecode(body) as List<dynamic>;
 
     // Completions are prefix matches, so the name is only known if one comes back verbatim.
-    return names.any((name) => name is String && name == term);
+    return names.any((name) => name is String && name.toLowerCase() == term);
   }
 
   Future<IList<UserRatingHistoryPerf>> getRatingHistory(UserId id) {
