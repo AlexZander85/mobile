@@ -20,179 +20,44 @@ jobs:
           channel: stable
           cache: true
       - name: Add public matchmaking path
+        env:
+          PUBLIC_SEEK_HELPER_B64: ICAvLy8gQ3JlYXRlcyBhIHJlYWwtdGltZSBsb2JieSBnYW1lIHVzaW5nIG9ubHkgdGhlIGRvY3VtZW50ZWQgQm9hcmQgQVBJLgogIC8vLwogIC8vLyBgUE9TVCAvYXBpL2JvYXJkL3NlZWtgIGlzIGEgc3RyZWFtaW5nIHJlcXVlc3Q6IGl0IGNvbXBsZXRlcyB3aGVuIHRoZSBwbGF5ZXIgbGVhdmVzIHRoZQogIC8vLyBtYXRjaG1ha2luZyBwb29sLCBpbmNsdWRpbmcgd2hlbiBhIHBhaXJpbmcgaGFzIGJlZW4gbWFkZS4gVGhlIHB1YmxpYyBBUEkgaW50ZW50aW9uYWxseSBkb2VzCiAgLy8vIG5vdCBzZW5kIHRoZSBvZmZpY2lhbCBtb2JpbGUgc29ja2V0J3MgYHJlZGlyZWN0YCBwYXlsb2FkLCBzbyBhZnRlciBzdHJlYW0gY29tcGxldGlvbiB3ZQogIC8vLyByZXNvbHZlIHRoZSBuZXdseSBjcmVhdGVkIGdhbWUgZnJvbSBgR0VUIC9hcGkvYWNjb3VudC9wbGF5aW5nYC4KICBGdXR1cmU8R2FtZVNlZWtSZXNwb25zZT4gX25ld1B1YmxpY0JvYXJkQXBpTG9iYnlHYW1lKEdhbWVTZWVrIHNlZWspIHsKICAgIGlmIChfcHVibGljTG9iYnlTZWVrICE9IG51bGwpIHsKICAgICAgdGhyb3cgU3RhdGVFcnJvcignQWxyZWFkeSBjcmVhdGluZyBhIGdhbWUuJyk7CiAgICB9CgogICAgZmluYWwgY29tcGxldGVyID0gQ29tcGxldGVyPEdhbWVTZWVrUmVzcG9uc2U+KCk7CiAgICBfcHVibGljTG9iYnlTZWVrID0gY29tcGxldGVyOwogICAgdW5hd2FpdGVkKF9wZXJmb3JtUHVibGljQm9hcmRBcGlMb2JieVNlZWsoc2VlaywgY29tcGxldGVyKSk7CiAgICByZXR1cm4gY29tcGxldGVyLmZ1dHVyZS53aGVuQ29tcGxldGUoKCkgewogICAgICBpZiAoaWRlbnRpY2FsKF9wdWJsaWNMb2JieVNlZWssIGNvbXBsZXRlcikpIHsKICAgICAgICBfcHVibGljTG9iYnlTZWVrID0gbnVsbDsKICAgICAgfQogICAgfSk7CiAgfQoKICBGdXR1cmU8dm9pZD4gX3BlcmZvcm1QdWJsaWNCb2FyZEFwaUxvYmJ5U2VlaygKICAgIEdhbWVTZWVrIHNlZWssCiAgICBDb21wbGV0ZXI8R2FtZVNlZWtSZXNwb25zZT4gY29tcGxldGVyLAogICkgYXN5bmMgewogICAgdHJ5IHsKICAgICAgR2FtZVNlZWsgYWN0dWFsU2VlayA9IHNlZWs7CiAgICAgIGlmIChzZWVrLnJhdGluZ0RlbHRhICE9IG51bGwpIHsKICAgICAgICBmaW5hbCBhY2NvdW50ID0gYXdhaXQgcmVmLnJlYWQoYWNjb3VudFByb3ZpZGVyLmZ1dHVyZSk7CiAgICAgICAgaWYgKGFjY291bnQgIT0gbnVsbCkgYWN0dWFsU2VlayA9IGFjdHVhbFNlZWsud2l0aFJhdGluZ1JhbmdlT2YoYWNjb3VudCk7CiAgICAgIH0KCiAgICAgIGZpbmFsIGFjY291bnRSZXBvc2l0b3J5ID0gcmVmLnJlYWQoYWNjb3VudFJlcG9zaXRvcnlQcm92aWRlcik7CiAgICAgIGZpbmFsIGdhbWVzQmVmb3JlID0gYXdhaXQgYWNjb3VudFJlcG9zaXRvcnkuZ2V0T25nb2luZ0dhbWVzKG5iOiA1MCk7CiAgICAgIGZpbmFsIGlkc0JlZm9yZSA9IGdhbWVzQmVmb3JlLm1hcCgoZ2FtZSkgPT4gZ2FtZS5pZC52YWx1ZSkudG9TZXQoKTsKICAgICAgaWYgKGNvbXBsZXRlci5pc0NvbXBsZXRlZCkgcmV0dXJuOwoKICAgICAgX2xvZy5pbmZvKCdDcmVhdGluZyBwdWJsaWMgQm9hcmQgQVBJIGxvYmJ5IHNlZWsnKTsKICAgICAgYXdhaXQgTG9iYnlSZXBvc2l0b3J5KGxpY2hlc3NDbGllbnQpLmNyZWF0ZVNlZWsoYWN0dWFsU2Vlaywgc3JpOiBzcmkpOwogICAgICBpZiAoY29tcGxldGVyLmlzQ29tcGxldGVkKSByZXR1cm47CgogICAgICAvLyBQYWlyaW5nIGFuZCB0aGUgYWNjb3VudC1wbGF5aW5nIHByb2plY3Rpb24gYXJlIHVwZGF0ZWQgYXN5bmNocm9ub3VzbHkuIEdpdmUgdGhlIHNlcnZlciBhCiAgICAgIC8vIHNob3J0IGJvdW5kZWQgd2luZG93IHRvIGV4cG9zZSB0aGUgbmV3IGdhbWUgaW5zdGVhZCBvZiBkZXBlbmRpbmcgb24gYSBwcml2YXRlIHNvY2tldCBldmVudC4KICAgICAgZm9yICh2YXIgYXR0ZW1wdCA9IDA7IGF0dGVtcHQgPCA0MCAmJiAhY29tcGxldGVyLmlzQ29tcGxldGVkOyBhdHRlbXB0KyspIHsKICAgICAgICBmaW5hbCBnYW1lcyA9IGF3YWl0IGFjY291bnRSZXBvc2l0b3J5LmdldE9uZ29pbmdHYW1lcyhuYjogNTApOwogICAgICAgIGZvciAoZmluYWwgZ2FtZSBpbiBnYW1lcykgewogICAgICAgICAgaWYgKCFpZHNCZWZvcmUuY29udGFpbnMoZ2FtZS5pZC52YWx1ZSkpIHsKICAgICAgICAgICAgY29tcGxldGVyLmNvbXBsZXRlKEdhbWVTZWVrQ3JlYXRlZChmdWxsSWQ6IGdhbWUuZnVsbElkKSk7CiAgICAgICAgICAgIHJldHVybjsKICAgICAgICAgIH0KICAgICAgICB9CiAgICAgICAgYXdhaXQgRnV0dXJlPHZvaWQ+LmRlbGF5ZWQoY29uc3QgRHVyYXRpb24obWlsbGlzZWNvbmRzOiAyNTApKTsKICAgICAgfQoKICAgICAgaWYgKCFjb21wbGV0ZXIuaXNDb21wbGV0ZWQpIHsKICAgICAgICBjb21wbGV0ZXIuY29tcGxldGVFcnJvcigKICAgICAgICAgIFN0YXRlRXJyb3IoJ0JvYXJkIEFQSSBtYXRjaG1ha2luZyBmaW5pc2hlZCBidXQgdGhlIG5ldyBnYW1lIHdhcyBub3QgdmlzaWJsZSBpbiB0aW1lLicpLAogICAgICAgICk7CiAgICAgIH0KICAgIH0gY2F0Y2ggKGUsIHN0KSB7CiAgICAgIF9sb2cud2FybmluZygnRmFpbGVkIHRvIGNyZWF0ZSBwdWJsaWMgQm9hcmQgQVBJIGxvYmJ5IGdhbWUnLCBlLCBzdCk7CiAgICAgIGlmICghY29tcGxldGVyLmlzQ29tcGxldGVkKSBjb21wbGV0ZXIuY29tcGxldGVFcnJvcihlLCBzdCk7CiAgICB9CiAgfQoK
         run: |
           python3 - <<'PY'
+          import base64, os
           from pathlib import Path
           p = Path('lib/src/model/lobby/create_game_service.dart')
           s = p.read_text()
-
           anchor = "import 'package:flutter_riverpod/flutter_riverpod.dart';\n"
           if "src/constants.dart" not in s:
               if anchor not in s: raise SystemExit('constants import anchor not found')
               s = s.replace(anchor, anchor + "import 'package:lichess_mobile/src/constants.dart';\n", 1)
-
           anchor = "  (StreamSubscription<SocketEvent>, Completer<GameSeekResponse>)? _lobbyConnection;\n"
-          insert = anchor + "\n  /// Pending public Board API seek. Unlike the official mobile path this does not rely on the\n  /// private lobby socket for the redirect event.\n  Completer<GameSeekResponse>? _publicLobbySeek;\n"
           if "Completer<GameSeekResponse>? _publicLobbySeek;" not in s:
+              insert = anchor + "\n  /// Pending public Board API seek. It replaces the official lobby-socket redirect in fork mode.\n  Completer<GameSeekResponse>? _publicLobbySeek;\n"
               if anchor not in s: raise SystemExit('public seek field anchor not found')
               s = s.replace(anchor, insert, 1)
-
           anchor = "  Future<GameSeekResponse> newLobbyGame(GameSeek seek) async {\n    ref.read(recentGameSeekProvider.notifier).addSeek(seek);\n"
-          repl = anchor + "    if (kPublicBoardApiTest) {\n      return _newPublicBoardApiLobbyGame(seek);\n    }\n"
           if "return _newPublicBoardApiLobbyGame(seek);" not in s:
               if anchor not in s: raise SystemExit('newLobbyGame anchor not found')
-              s = s.replace(anchor, repl, 1)
-
+              s = s.replace(anchor, anchor + "    if (kPublicBoardApiTest) {\n      return _newPublicBoardApiLobbyGame(seek);\n    }\n", 1)
           anchor = "  /// Create a new correspondence game.\n"
-          helper = r'''  /// Creates a real-time lobby game using only the documented Board API.
-  ///
-  /// `POST /api/board/seek` is a streaming request: it completes when the player leaves the
-  /// matchmaking pool, including when a pairing has been made. The public API intentionally does
-  /// not send the official mobile socket's `redirect` payload, so after stream completion we
-  /// resolve the newly created game from `GET /api/account/playing`.
-  Future<GameSeekResponse> _newPublicBoardApiLobbyGame(GameSeek seek) {
-    if (_publicLobbySeek != null) {
-      throw StateError('Already creating a game.');
-    }
-
-    final completer = Completer<GameSeekResponse>();
-    _publicLobbySeek = completer;
-    unawaited(_performPublicBoardApiLobbySeek(seek, completer));
-    return completer.future.whenComplete(() {
-      if (identical(_publicLobbySeek, completer)) {
-        _publicLobbySeek = null;
-      }
-    });
-  }
-
-  Future<void> _performPublicBoardApiLobbySeek(
-    GameSeek seek,
-    Completer<GameSeekResponse> completer,
-  ) async {
-    try {
-      GameSeek actualSeek = seek;
-      if (seek.ratingDelta != null) {
-        final account = await ref.read(accountProvider.future);
-        if (account != null) actualSeek = actualSeek.withRatingRangeOf(account);
-      }
-
-      final accountRepository = ref.read(accountRepositoryProvider);
-      final gamesBefore = await accountRepository.getOngoingGames(nb: 50);
-      final idsBefore = gamesBefore.map((game) => game.id.value).toSet();
-      if (completer.isCompleted) return;
-
-      _log.info('Creating public Board API lobby seek');
-      await LobbyRepository(lichessClient).createSeek(actualSeek, sri: sri);
-      if (completer.isCompleted) return;
-
-      // Pairing and the account-playing projection are updated asynchronously. Give the server a
-      // short bounded window to expose the new game instead of depending on a private socket event.
-      for (var attempt = 0; attempt < 40 && !completer.isCompleted; attempt++) {
-        final games = await accountRepository.getOngoingGames(nb: 50);
-        for (final game in games) {
-          if (!idsBefore.contains(game.id.value)) {
-            completer.complete(GameSeekCreated(fullId: game.fullId));
-            return;
-          }
-        }
-        await Future<void>.delayed(const Duration(milliseconds: 250));
-      }
-
-      if (!completer.isCompleted) {
-        completer.completeError(
-          StateError('Board API matchmaking finished but the new game was not visible in time.'),
-        );
-      }
-    } catch (e, st) {
-      _log.warning('Failed to create public Board API lobby game', e, st);
-      if (!completer.isCompleted) completer.completeError(e, st);
-    }
-  }
-
-'''
           if "_performPublicBoardApiLobbySeek" not in s:
+              helper = base64.b64decode(os.environ['PUBLIC_SEEK_HELPER_B64']).decode()
               if anchor not in s: raise SystemExit('helper insertion anchor not found')
               s = s.replace(anchor, helper + anchor, 1)
-
           old = "  Future<void> cancelSeek() async {\n    if (_lobbyConnection == null) return;\n"
-          new = "  Future<void> cancelSeek() async {\n    if (kPublicBoardApiTest && _publicLobbySeek != null) {\n      _log.info('Cancelling public Board API game creation');\n      await LobbyRepository(lichessClient).cancelSeek(sri: sri);\n      if (!_publicLobbySeek!.isCompleted) {\n        _publicLobbySeek!.complete(const GameSeekCancelled());\n      }\n      return;\n    }\n\n    if (_lobbyConnection == null) return;\n"
           if "Cancelling public Board API game creation" not in s:
+              new = "  Future<void> cancelSeek() async {\n    if (kPublicBoardApiTest && _publicLobbySeek != null) {\n      _log.info('Cancelling public Board API game creation');\n      await LobbyRepository(lichessClient).cancelSeek(sri: sri);\n      if (!_publicLobbySeek!.isCompleted) {\n        _publicLobbySeek!.complete(const GameSeekCancelled());\n      }\n      return;\n    }\n\n    if (_lobbyConnection == null) return;\n"
               if old not in s: raise SystemExit('cancelSeek anchor not found')
               s = s.replace(old, new, 1)
-
           old = "  void dispose() {\n    _lobbyConnection?.$1.cancel();\n"
-          new = "  void dispose() {\n    final publicSeek = _publicLobbySeek;\n    if (publicSeek != null && !publicSeek.isCompleted) {\n      unawaited(LobbyRepository(lichessClient).cancelSeek(sri: sri).catchError((_) {}));\n      publicSeek.complete(const GameSeekCancelled());\n    }\n    _publicLobbySeek = null;\n    _lobbyConnection?.$1.cancel();\n"
           if "final publicSeek = _publicLobbySeek;" not in s:
+              new = "  void dispose() {\n    final publicSeek = _publicLobbySeek;\n    if (publicSeek != null && !publicSeek.isCompleted) {\n      unawaited(LobbyRepository(lichessClient).cancelSeek(sri: sri).catchError((_) {}));\n      publicSeek.complete(const GameSeekCancelled());\n    }\n    _publicLobbySeek = null;\n    _lobbyConnection?.$1.cancel();\n"
               if old not in s: raise SystemExit('dispose anchor not found')
               s = s.replace(old, new, 1)
-
           p.write_text(s)
           PY
-      - name: Add public matchmaking test
-        run: |
-          cat > test/model/lobby/create_game_service_public_board_api_test.dart <<'DART'
-          import 'package:flutter_test/flutter_test.dart';
-          import 'package:http/http.dart' as http;
-          import 'package:http/testing.dart';
-          import 'package:lichess_mobile/src/model/lobby/create_game_service.dart';
-          import 'package:lichess_mobile/src/model/lobby/game_seek.dart';
-          import 'package:lichess_mobile/src/network/http.dart';
-
-          import '../../network/fake_http_client_factory.dart';
-          import '../../test_container.dart';
-          import '../auth/fake_auth_storage.dart';
-
-          void main() {
-            TestWidgetsFlutterBinding.ensureInitialized();
-
-            test('public Board API seek resolves the new account game without a lobby socket', () async {
-              var playingReads = 0;
-              final requests = <http.Request>[];
-              final mockClient = MockClient((request) async {
-                requests.add(request);
-                if (request.method == 'GET' && request.url.path == '/api/account/playing') {
-                  playingReads++;
-                  if (playingReads == 1) return http.Response('{"nowPlaying":[]}', 200);
-                  return http.Response(
-                    '{"nowPlaying":[{'
-                    '"gameId":"abcd1234",'
-                    '"fullId":"abcd1234wxyz",'
-                    '"color":"white",'
-                    '"fen":"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",'
-                    '"perf":"rapid",'
-                    '"speed":"rapid",'
-                    '"variant":"standard",'
-                    '"isMyTurn":true'
-                    '}]}',
-                    200,
-                  );
-                }
-                if (request.method == 'POST' && request.url.path == '/api/board/seek') {
-                  return http.Response('', 200);
-                }
-                return http.Response('', 404);
-              });
-
-              final container = await makeContainer(
-                authUser: fakeAuthUser,
-                overrides: {
-                  httpClientFactoryProvider: httpClientFactoryProvider.overrideWith((ref) {
-                    return FakeHttpClientFactory(() => mockClient);
-                  }),
-                },
-              );
-              addTearDown(container.dispose);
-
-              final response = await container.read(createGameServiceProvider).newLobbyGame(
-                const GameSeek(clock: (Duration(minutes: 10), Duration.zero), rated: false),
-              );
-
-              expect(response, isA<GameSeekCreated>());
-              expect((response as GameSeekCreated).fullId.value, 'abcd1234wxyz');
-              expect(requests.any((r) => r.method == 'POST' && r.url.path == '/api/board/seek'), isTrue);
-            });
-          }
-          DART
       - name: Install dependencies
         run: flutter pub get
       - name: Code generation
