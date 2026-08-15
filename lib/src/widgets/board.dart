@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:chessground/chessground.dart';
 import 'package:dartchess/dartchess.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lichess_mobile/src/model/common/chess.dart';
 import 'package:lichess_mobile/src/model/settings/board_preferences.dart';
 import 'package:material_ui/material_ui.dart';
@@ -12,7 +11,7 @@ import 'package:material_ui/material_ui.dart';
 /// For a non-interactive board, use [StaticChessboard] instead. To disable user
 /// interaction on this board (e.g. at the end of a game), drive the [controller]
 /// with game data whose `playerSide` is [PlayerSide.none].
-class BoardWidget extends ConsumerWidget {
+class BoardWidget extends StatelessWidget {
   const BoardWidget({
     required this.size,
     required this.orientation,
@@ -47,22 +46,7 @@ class BoardWidget extends ConsumerWidget {
   final GlobalKey? boardKey;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final premoveMode = ref.watch(boardPreferencesProvider.select((prefs) => prefs.premoveMode));
-
-    // Keep an already queued line consistent with live preference changes. In
-    // particular, disabling premoves must cancel a pending head immediately so it
-    // cannot execute after the opponent's next move. Switching multiple -> single
-    // is handled by the controller: it keeps only the queue head and restores the
-    // authoritative board; switching single -> multiple turns that head into the
-    // first speculative preview move.
-    ref.listen(boardPreferencesProvider.select((prefs) => prefs.premoveMode), (previous, next) {
-      if (next == PremoveMode.disabled) controller.clearPremoves();
-      controller.maxPremoveCount = next.maxCount;
-    });
-
-    controller.maxPremoveCount = settings.enablePremoves ? premoveMode.maxCount : 1;
-
+  Widget build(BuildContext context) {
     final board = Chessboard(
       key: boardKey,
       controller: controller,
