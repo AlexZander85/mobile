@@ -31,12 +31,7 @@ void main() {
       final state = publicBoardGameStateFromEvent(
         initialFen: '8/8/8/8/8/8/4K3/7k w - - 0 1',
         variantKey: 'fromPosition',
-        state: const {
-          'moves': 'e2e3',
-          'wtime': 1000,
-          'btime': 1000,
-          'status': 'started',
-        },
+        state: const {'moves': 'e2e3', 'wtime': 1000, 'btime': 1000, 'status': 'started'},
       );
 
       expect(state.position.fen, startsWith('8/8/8/8/8/4K3/8/7k b - -'));
