@@ -1,0 +1,226 @@
+name: Integrate public game controls
+
+on: [push]
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: feature/multiple-premoves
+          fetch-depth: 0
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          channel: stable
+          cache: true
+      - name: Patch OAuth scopes, Board API controls and clocks
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          # Normal-shell settings read/write the user's Lichess preferences, so request only the
+          # additional documented preference scopes needed by those existing screens.
+          p = Path('lib/src/model/auth/auth_repository.dart')
+          s = p.read_text()
+          old = "const oauthScopes = kPublicBoardApiTest ? ['board:play'] : ['web:mobile'];"
+          new = "const oauthScopes = kPublicBoardApiTest\n    ? ['board:play', 'preference:read', 'preference:write']\n    : ['web:mobile'];"
+          if old not in s: raise SystemExit('oauthScopes anchor not found')
+          p.write_text(s.replace(old, new, 1))
+
+          # Public Board API actions used by the normal-shell game screen.
+          p = Path('lib/src/model/public_board_api/public_board_api.dart')
+          s = p.read_text()
+          old = "  Future<void> playMove(String gameId, Move move) async {\n    // Lichess Board API uses Chess960-compatible castling notation (king takes rook), even for\n    // standard chess. The helper converts e1g1/e1c1 style moves when necessary.\n    final uci = normalizeUci(move.uci);\n    await client.postRead(Uri(path: '/api/board/game/$gameId/move/$uci'));\n  }\n}"
+          new = "  Future<void> playMove(String gameId, Move move) async {\n    // Lichess Board API uses Chess960-compatible castling notation (king takes rook), even for\n    // standard chess. The helper converts e1g1/e1c1 style moves when necessary.\n    final uci = normalizeUci(move.uci);\n    await client.postRead(Uri(path: '/api/board/game/$gameId/move/$uci'));\n  }\n\n  /// Offers a draw, or accepts the opponent's pending draw offer.\n  Future<void> offerOrAcceptDraw(String gameId) {\n    return client.postRead(Uri(path: '/api/board/game/$gameId/draw/yes'));\n  }\n\n  Future<void> resign(String gameId) {\n    return client.postRead(Uri(path: '/api/board/game/$gameId/resign'));\n  }\n}"
+          if old not in s: raise SystemExit('repository playMove anchor not found')
+          p.write_text(s.replace(old, new, 1))
+
+          p = Path('lib/src/view/public_board_api/public_board_api_test_screen.dart')
+          s = p.read_text()
+
+          old = "  String? _variantKey;\n  String? _error;\n  bool _sendingMove = false;\n"
+          new = "  String? _variantKey;\n  String? _error;\n  DateTime? _authoritativeReceivedAt;\n  Timer? _clockTicker;\n  bool _sendingMove = false;\n  bool _sendingAction = false;\n"
+          if old not in s: raise SystemExit('screen fields anchor not found')
+          s = s.replace(old, new, 1)
+
+          old = "    _authoritative = authoritative;\n    if (_controller == null) {"
+          new = "    _authoritative = authoritative;\n    _authoritativeReceivedAt = DateTime.now();\n    if (authoritative.isPlaying &&\n        (authoritative.whiteTimeMs != null || authoritative.blackTimeMs != null)) {\n      _clockTicker ??= Timer.periodic(const Duration(milliseconds: 250), (_) {\n        if (mounted && _authoritative?.isPlaying == true) setState(() {});\n      });\n    } else {\n      _clockTicker?.cancel();\n      _clockTicker = null;\n    }\n    if (_controller == null) {"
+          if old not in s: raise SystemExit('authoritative anchor not found')
+          s = s.replace(old, new, 1)
+
+          old = "  void _onStreamError(Object error, StackTrace stackTrace) {"
+          helper = """  int? _remainingClockMs(Side side) {
+    final authoritative = _authoritative;
+    if (authoritative == null) return null;
+    final base = side == Side.white
+        ? authoritative.whiteTimeMs
+        : authoritative.blackTimeMs;
+    if (base == null) return null;
+    if (!authoritative.isPlaying ||
+        authoritative.position.turn != side ||
+        _authoritativeReceivedAt == null) {
+      return base;
+    }
+    final elapsed = DateTime.now().difference(_authoritativeReceivedAt!).inMilliseconds;
+    return math.max(0, base - elapsed).toInt();
+  }
+
+  String _formatClock(int? milliseconds) {
+    if (milliseconds == null) return '--:--';
+    final totalSeconds = (milliseconds / 1000).ceil();
+    final minutes = totalSeconds ~/ 60;
+    final seconds = totalSeconds % 60;
+    return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  Future<bool> _confirmGameAction({required String title, required String body}) async {
+    if (!ref.read(boardPreferencesProvider).confirmResignAndDraw) return true;
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(title),
+            content: Text(body),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Отмена'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Подтвердить'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  Future<void> _offerOrAcceptDraw() async {
+    if (_sendingAction || _authoritative?.isPlaying != true) return;
+    if (!await _confirmGameAction(
+      title: 'Ничья',
+      body: 'Предложить ничью сопернику или принять его текущее предложение?',
+    )) {
+      return;
+    }
+    setState(() => _sendingAction = true);
+    try {
+      await ref.read(publicBoardApiRepositoryProvider).offerOrAcceptDraw(widget.game.id);
+    } catch (e) {
+      if (mounted) setState(() => _error = 'Не удалось отправить предложение ничьей: $e');
+    } finally {
+      if (mounted) setState(() => _sendingAction = false);
+    }
+  }
+
+  Future<void> _resign() async {
+    if (_sendingAction || _authoritative?.isPlaying != true) return;
+    if (!await _confirmGameAction(
+      title: 'Сдаться?',
+      body: 'Партия будет немедленно завершена поражением.',
+    )) {
+      return;
+    }
+    setState(() => _sendingAction = true);
+    try {
+      await ref.read(publicBoardApiRepositoryProvider).resign(widget.game.id);
+    } catch (e) {
+      if (mounted) setState(() => _error = 'Не удалось сдаться: $e');
+    } finally {
+      if (mounted) setState(() => _sendingAction = false);
+    }
+  }
+
+"""
+          if helper.strip() in s: raise SystemExit('screen helper already present')
+          if old not in s: raise SystemExit('stream error anchor not found')
+          s = s.replace(old, helper + old, 1)
+
+          old = "  void dispose() {\n    _reconnectTimer?.cancel();\n    _streamSubscription?.cancel();"
+          new = "  void dispose() {\n    _clockTicker?.cancel();\n    _reconnectTimer?.cancel();\n    _streamSubscription?.cancel();"
+          if old not in s: raise SystemExit('dispose anchor not found')
+          s = s.replace(old, new, 1)
+
+          old = "    final variant = Variant.nameMap[variantKey] ?? Variant.standard;\n\n    return Scaffold(\n      appBar: AppBar(title: Text('vs ${widget.game.opponentName}')),"
+          new = "    final variant = Variant.nameMap[variantKey] ?? Variant.standard;\n    final mySide = widget.game.side;\n    final opponentSide = mySide == Side.white ? Side.black : Side.white;\n    final authoritative = _authoritative;\n\n    return Scaffold(\n      appBar: AppBar(\n        title: Text('vs ${widget.game.opponentName}'),\n        actions: [\n          if (authoritative?.isPlaying == true)\n            IconButton(\n              onPressed: _sendingAction ? null : _offerOrAcceptDraw,\n              tooltip: 'Предложить или принять ничью',\n              icon: const Icon(Icons.handshake_outlined),\n            ),\n          if (authoritative?.isPlaying == true)\n            IconButton(\n              onPressed: _sendingAction ? null : _resign,\n              tooltip: 'Сдаться',\n              icon: const Icon(Icons.flag_outlined),\n            ),\n        ],\n      ),"
+          if old not in s: raise SystemExit('build/appbar anchor not found')
+          s = s.replace(old, new, 1)
+
+          old = "                  LayoutBuilder(\n                    builder: (context, constraints) {"
+          new = "                  _PublicGameClock(\n                    label: widget.game.opponentName,\n                    time: _formatClock(_remainingClockMs(opponentSide)),\n                    active: authoritative?.isPlaying == true &&\n                        authoritative?.position.turn == opponentSide,\n                  ),\n                  const SizedBox(height: 8),\n                  LayoutBuilder(\n                    builder: (context, constraints) {"
+          if old not in s: raise SystemExit('board layout anchor not found')
+          s = s.replace(old, new, 1)
+
+          old = "                  const SizedBox(height: 12),\n                  if (widget.showDiagnostics)\n"
+          new = "                  const SizedBox(height: 8),\n                  _PublicGameClock(\n                    label: 'Вы',\n                    time: _formatClock(_remainingClockMs(mySide)),\n                    active: authoritative?.isPlaying == true &&\n                        authoritative?.position.turn == mySide,\n                  ),\n                  if (authoritative != null && !authoritative.isPlaying)\n                    Padding(\n                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),\n                      child: Text(\n                        'Партия завершена • ${authoritative.status}',\n                        textAlign: TextAlign.center,\n                        style: Theme.of(context).textTheme.titleMedium,\n                      ),\n                    ),\n                  const SizedBox(height: 12),\n                  if (widget.showDiagnostics)\n"
+          if old not in s: raise SystemExit('post-board anchor not found')
+          s = s.replace(old, new, 1)
+
+          anchor = "class _PremoveModeSelector extends ConsumerWidget {"
+          clock_widget = """class _PublicGameClock extends StatelessWidget {
+  const _PublicGameClock({required this.label, required this.time, required this.active});
+
+  final String label;
+  final String time;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    final textStyle = Theme.of(context).textTheme.titleLarge?.copyWith(
+      fontFeatures: const [FontFeature.tabularFigures()],
+      fontWeight: active ? FontWeight.bold : FontWeight.normal,
+    );
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+          ),
+          Text(time, style: textStyle),
+        ],
+      ),
+    );
+  }
+}
+
+"""
+          # FontFeature lives in dart:ui; avoid adding an import by not using it if import absent.
+          clock_widget = clock_widget.replace("      fontFeatures: const [FontFeature.tabularFigures()],\n", "")
+          if anchor not in s: raise SystemExit('premove selector anchor not found')
+          s = s.replace(anchor, clock_widget + anchor, 1)
+
+          p.write_text(s)
+          PY
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Format
+        run: |
+          dart format \
+            lib/src/model/auth/auth_repository.dart \
+            lib/src/model/public_board_api/public_board_api.dart \
+            lib/src/view/public_board_api/public_board_api_test_screen.dart
+      - name: Analyze
+        run: flutter analyze
+      - name: Targeted tests
+        run: |
+          flutter test --dart-define=PUBLIC_BOARD_API_TEST=true test/model/public_board_api/public_board_api_test.dart
+          flutter test --dart-define=PUBLIC_BOARD_API_TEST=true test/model/lobby/create_game_service_public_board_api_test.dart
+          flutter test test/model/settings/board_preferences_test.dart
+      - name: Commit integration
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            lib/src/model/auth/auth_repository.dart \
+            lib/src/model/public_board_api/public_board_api.dart \
+            lib/src/view/public_board_api/public_board_api_test_screen.dart
+          git commit -m "Add public Board API game controls and clocks"
+          git push origin HEAD:feature/multiple-premoves
