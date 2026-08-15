@@ -2,18 +2,17 @@ import 'dart:async';
 
 import 'package:chessground/chessground.dart';
 import 'package:dartchess/dartchess.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lichess_mobile/src/model/common/chess.dart';
 import 'package:lichess_mobile/src/model/settings/board_preferences.dart';
 import 'package:material_ui/material_ui.dart';
-
-const _kMultiplePremoveLimit = 10;
 
 /// A widget that displays an interactive chessboard driven by a [ChessboardController].
 ///
 /// For a non-interactive board, use [StaticChessboard] instead. To disable user
 /// interaction on this board (e.g. at the end of a game), drive the [controller]
 /// with game data whose `playerSide` is [PlayerSide.none].
-class BoardWidget extends StatelessWidget {
+class BoardWidget extends ConsumerWidget {
   const BoardWidget({
     required this.size,
     required this.orientation,
@@ -48,12 +47,9 @@ class BoardWidget extends StatelessWidget {
   final GlobalKey? boardKey;
 
   @override
-  Widget build(BuildContext context) {
-    // Until the three-state preference (multiple / single / disabled) is wired in,
-    // the existing premove switch enables the multiple-premove engine. Keeping this
-    // policy in the app rather than flutter-chessground preserves the package's
-    // backwards-compatible single-premove default.
-    controller.maxPremoveCount = settings.enablePremoves ? _kMultiplePremoveLimit : 1;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final premoveMode = ref.watch(boardPreferencesProvider.select((prefs) => prefs.premoveMode));
+    controller.maxPremoveCount = settings.enablePremoves ? premoveMode.maxCount : 1;
 
     final board = Chessboard(
       key: boardKey,
