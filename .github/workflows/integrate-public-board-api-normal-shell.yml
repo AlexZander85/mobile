@@ -1,0 +1,117 @@
+name: Integrate public Board API into normal shell
+
+on: [push]
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: feature/multiple-premoves
+          fetch-depth: 0
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          channel: stable
+          cache: true
+      - name: Apply normal-shell integration
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          # Route active games from the normal app shell through the public Board API adapter.
+          p = Path('lib/src/view/game/game_screen.dart')
+          s = p.read_text()
+          old = "import 'package:flutter_riverpod/flutter_riverpod.dart';\n"
+          new = old + "import 'package:lichess_mobile/src/constants.dart';\n"
+          if "src/constants.dart" not in s:
+              if old not in s: raise SystemExit('game_screen import anchor not found')
+              s = s.replace(old, new, 1)
+          old = "import 'package:lichess_mobile/src/view/game/watcher_list_bottom_sheet.dart';\n"
+          new = old + "import 'package:lichess_mobile/src/view/public_board_api/public_board_api_game_loader_screen.dart';\n"
+          if "public_board_api_game_loader_screen.dart" not in s:
+              if old not in s: raise SystemExit('game_screen public loader import anchor not found')
+              s = s.replace(old, new, 1)
+          old = "  static Route<dynamic> buildRoute({\n    required GameScreenSource source,\n    LoadingParam? loadingPosition,\n    DateTime? lastMoveAt,\n  }) {\n    return buildScreenRoute(\n"
+          new = "  static Route<dynamic> buildRoute({\n    required GameScreenSource source,\n    LoadingParam? loadingPosition,\n    DateTime? lastMoveAt,\n  }) {\n    // Public fork builds keep the normal application navigation, but active games use the\n    // documented Board API instead of the official app's private `web:mobile` socket. Past games\n    // remain on the normal read-only screen.\n    if (kPublicBoardApiTest && lastMoveAt == null && source is ExistingGameSource) {\n      return buildScreenRoute(\n        screen: PublicBoardApiGameLoaderScreen(gameId: source.id.gameId.value),\n      );\n    }\n\n    return buildScreenRoute(\n"
+          if old not in s: raise SystemExit('game_screen buildRoute anchor not found')
+          s = s.replace(old, new, 1)
+          p.write_text(s)
+
+          # Public fork builds use the normal app entrypoint, but do not initialize private mobile
+          # notification/Firebase infrastructure that depends on official deployment credentials.
+          p = Path('lib/main.dart')
+          s = p.read_text()
+          old = "import 'package:lichess_mobile/src/binding.dart';\n"
+          new = old + "import 'package:lichess_mobile/src/constants.dart';\n"
+          if "src/constants.dart" not in s:
+              if old not in s: raise SystemExit('main import anchor not found')
+              s = s.replace(old, new, 1)
+          old = "  await initializeLocalNotifications(locale);\n\n  if (defaultTargetPlatform != TargetPlatform.linux) {\n    await lichessBinding.initializeFirebase();\n  }\n"
+          new = "  if (!kPublicBoardApiTest) {\n    await initializeLocalNotifications(locale);\n\n    if (defaultTargetPlatform != TargetPlatform.linux) {\n      await lichessBinding.initializeFirebase();\n    }\n  }\n"
+          if old not in s: raise SystemExit('main private init anchor not found')
+          s = s.replace(old, new, 1)
+          p.write_text(s)
+
+          # Keep the normal MaterialApp/tabs, but don't start background services or reconnect the
+          # private socket in public fork mode.
+          p = Path('lib/src/app.dart')
+          s = p.read_text()
+          old = "    // Start services\n    ref.read(appLogServiceProvider).start();\n    ref.read(notificationServiceProvider).start();\n    ref.read(messageServiceProvider).start();\n    ref.read(challengeServiceProvider).start();\n    ref.read(accountServiceProvider).start();\n    ref.read(correspondenceServiceProvider).start();\n    ref.read(quickActionServiceProvider).start();\n    ref.read(announceServiceProvider).start();\n    ref.read(appLinksServiceProvider).start();\n    ref.read(sharedPgnServiceProvider).start();\n    ref.read(broadcastServiceProvider).start();\n"
+          new = "    // Services that do not depend on the official mobile transport are safe in every build.\n    ref.read(appLogServiceProvider).start();\n    ref.read(appLinksServiceProvider).start();\n    ref.read(sharedPgnServiceProvider).start();\n\n    // The remaining services use the official mobile notification/socket infrastructure. Public\n    // fork builds intentionally leave them stopped and use OAuth + Board API for live games.\n    if (!kPublicBoardApiTest) {\n      ref.read(notificationServiceProvider).start();\n      ref.read(messageServiceProvider).start();\n      ref.read(challengeServiceProvider).start();\n      ref.read(accountServiceProvider).start();\n      ref.read(correspondenceServiceProvider).start();\n      ref.read(quickActionServiceProvider).start();\n      ref.read(announceServiceProvider).start();\n      ref.read(broadcastServiceProvider).start();\n    }\n"
+          if old not in s: raise SystemExit('app service block anchor not found')
+          s = s.replace(old, new, 1)
+          old = "    ref.listenManual(connectivityChangesProvider, (prev, current) async {\n"
+          new = old + "      if (kPublicBoardApiTest) return;\n"
+          if "if (kPublicBoardApiTest) return;" not in s:
+              if old not in s: raise SystemExit('app connectivity anchor not found')
+              s = s.replace(old, new, 1)
+          p.write_text(s)
+
+          # The dedicated test screen is reused as the Board API game renderer. Diagnostics remain
+          # available from the checkpoint/test entrypoint but disappear when opened from normal UI.
+          p = Path('lib/src/view/public_board_api/public_board_api_test_screen.dart')
+          s = p.read_text()
+          old = "  const PublicBoardGameTestScreen({required this.game, super.key});\n\n  final PublicBoardApiGame game;\n"
+          new = "  const PublicBoardGameTestScreen({\n    required this.game,\n    this.showDiagnostics = true,\n    super.key,\n  });\n\n  final PublicBoardApiGame game;\n  final bool showDiagnostics;\n"
+          if old not in s: raise SystemExit('public game constructor anchor not found')
+          s = s.replace(old, new, 1)
+          old = "                  Padding(\n                    padding: const EdgeInsets.symmetric(horizontal: 16),\n                    child: _PremoveModeSelector(mode: prefs.premoveMode),\n                  ),\n                  const SizedBox(height: 12),\n"
+          new = "                  if (widget.showDiagnostics) ...[\n                    Padding(\n                      padding: const EdgeInsets.symmetric(horizontal: 16),\n                      child: _PremoveModeSelector(mode: prefs.premoveMode),\n                    ),\n                    const SizedBox(height: 12),\n                  ],\n"
+          if old not in s: raise SystemExit('diagnostic selector anchor not found')
+          s = s.replace(old, new, 1)
+          old = "                  AnimatedBuilder(\n                    animation: controller,\n"
+          new = "                  if (widget.showDiagnostics)\n                    AnimatedBuilder(\n                    animation: controller,\n"
+          if old not in s: raise SystemExit('diagnostic queue anchor not found')
+          s = s.replace(old, new, 1)
+          p.write_text(s)
+          PY
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Code generation
+        run: dart run build_runner build
+      - name: Format changed sources
+        run: dart format lib/main.dart lib/src/app.dart lib/src/view/auth/sign_in_options.dart lib/src/view/game/game_screen.dart lib/src/view/public_board_api/public_board_api_game_loader_screen.dart lib/src/view/public_board_api/public_board_api_test_screen.dart
+      - name: Analyze
+        run: flutter analyze
+      - name: Targeted tests
+        run: |
+          flutter test test/model/public_board_api/public_board_api_test.dart
+          flutter test test/model/settings/board_preferences_test.dart
+          flutter test test/view/auth/email_login_screen_test.dart
+      - name: Commit integration
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/main.dart lib/src/app.dart lib/src/view/game/game_screen.dart lib/src/view/public_board_api/public_board_api_test_screen.dart lib/src/view/public_board_api/public_board_api_game_loader_screen.dart
+          if git diff --cached --quiet; then
+            echo 'No integration changes to commit'
+          else
+            git commit -m 'Integrate Board API games into normal mobile shell'
+            git push origin HEAD:feature/multiple-premoves
+          fi
