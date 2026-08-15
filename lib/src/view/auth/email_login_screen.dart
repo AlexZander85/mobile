@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/experimental/mutation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lichess_mobile/src/model/auth/auth_controller.dart';
 import 'package:lichess_mobile/src/model/auth/auth_repository.dart';
-import 'package:lichess_mobile/src/model/user/user_repository.dart';
 import 'package:lichess_mobile/src/styles/styles.dart';
 import 'package:lichess_mobile/src/utils/l10n_context.dart';
 import 'package:lichess_mobile/src/utils/navigation.dart';
@@ -113,9 +112,6 @@ class _EmailFormState extends ConsumerState<_EmailForm> {
   late final usernameController = TextEditingController(text: widget.initialUsername);
   late final emailController = TextEditingController(text: widget.initialEmail);
 
-  /// The name the server did not recognise, if any.
-  String? unknownUsername;
-
   @override
   void dispose() {
     usernameController.dispose();
@@ -131,34 +127,15 @@ class _EmailFormState extends ConsumerState<_EmailForm> {
 
     FocusScope.of(context).unfocus();
 
-    // The error is surfaced via the [ref.listen] in [build]; ignore the rethrown future so it does
-    // not become an unhandled exception.
+    // Let the dedicated login endpoint validate the account/email pair. A separate username
+    // autocomplete check is both redundant and can reject valid accounts when display casing
+    // differs from the normalized lookup term.
     emailLoginCodeRequestMutation.run(ref, (tsx) async {
-      if (!await usernameExists(tsx, username)) {
-        if (!mounted) return;
-        setState(() {
-          unknownUsername = username;
-        });
-        formKey.currentState?.validate();
-        return;
-      }
-
       await tsx
           .get(authControllerProvider.notifier)
           .requestEmailLoginCode(username: username, email: email);
       widget.onCodeSent(username: username, email: email);
     }).ignore();
-  }
-
-  /// Checks the name against the server, catching typos before a code is requested.
-  ///
-  /// A check that could not be made lets the name through.
-  Future<bool> usernameExists(MutationTransaction tsx, String username) async {
-    try {
-      return await tsx.get(userRepositoryProvider).usernameExists(username);
-    } catch (_) {
-      return true;
-    }
   }
 
   @override
@@ -190,11 +167,6 @@ class _EmailFormState extends ConsumerState<_EmailForm> {
               final username = value?.trim() ?? '';
               if (username.isEmpty) {
                 return 'Please enter your username.';
-              }
-              // Set by [submit] when the server did not know the name. Usernames are
-              // case-insensitive, so a case-only edit is still the same rejected account.
-              if (username.toLowerCase() == unknownUsername?.toLowerCase()) {
-                return context.l10n.usernameNotFound(username);
               }
               return null;
             },
