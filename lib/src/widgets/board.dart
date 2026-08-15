@@ -6,6 +6,8 @@ import 'package:lichess_mobile/src/model/common/chess.dart';
 import 'package:lichess_mobile/src/model/settings/board_preferences.dart';
 import 'package:material_ui/material_ui.dart';
 
+const _kMultiplePremoveLimit = 10;
+
 /// A widget that displays an interactive chessboard driven by a [ChessboardController].
 ///
 /// For a non-interactive board, use [StaticChessboard] instead. To disable user
@@ -47,6 +49,12 @@ class BoardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Until the three-state preference (multiple / single / disabled) is wired in,
+    // the existing premove switch enables the multiple-premove engine. Keeping this
+    // policy in the app rather than flutter-chessground preserves the package's
+    // backwards-compatible single-premove default.
+    controller.maxPremoveCount = settings.enablePremoves ? _kMultiplePremoveLimit : 1;
+
     final board = Chessboard(
       key: boardKey,
       controller: controller,
@@ -99,24 +107,32 @@ class _ErrorWidget extends StatelessWidget {
   }
 }
 
-/// Executes a pending premove on [ctrl] if it is legal in [position], calling [onMove] via
-/// [scheduleMicrotask] to avoid modifying Riverpod providers inside widget lifecycle callbacks.
-/// Clears the premove if it is illegal.
+/// Executes the head of the pending premove queue if it is legal in [position],
+/// calling [onMove] via [scheduleMicrotask] to avoid modifying Riverpod providers
+/// inside widget lifecycle callbacks.
+///
+/// Only the validated head is consumed. The remaining premoves stay queued and
+/// are reconsidered after the next real opponent move. If the head is illegal,
+/// the whole dependent queue is cleared. A promotion that needs user input also
+/// clears the tail because later premoves cannot safely depend on an unresolved
+/// promotion role.
 void tryExecutePremove(ChessboardController ctrl, Position position, void Function(Move) onMove) {
   final premove = ctrl.premove;
   if (premove == null) return;
-  if (position.isLegal(premove)) {
-    if (premove is NormalMove && isPromotionPawnMove(position, premove)) {
-      ctrl.premove = null;
-      ctrl.pendingPromotion = premove;
-    } else {
-      ctrl.premove = null;
-      scheduleMicrotask(() => onMove(premove));
-    }
-  } else {
-    // Premove became illegal (e.g. after a takeback) — clear it.
-    ctrl.premove = null;
+
+  if (!position.isLegal(premove)) {
+    ctrl.clearPremoves();
+    return;
   }
+
+  if (premove is NormalMove && isPromotionPawnMove(position, premove)) {
+    ctrl.clearPremoves();
+    ctrl.pendingPromotion = premove;
+    return;
+  }
+
+  ctrl.consumePremove();
+  scheduleMicrotask(() => onMove(premove));
 }
 
 /// Builds a [GameData] object for the given position and variant, including legal moves, check status, and crazyhouse drops.
