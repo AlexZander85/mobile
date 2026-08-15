@@ -5,7 +5,25 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
-   <application tools:replace="android:label"
+    <application
+        tools:replace="android:label"
         android:usesCleartextTraffic="true"
-        android:label="Lichess - DEBUG"/>
+        android:label="Lichess - DEBUG">
+
+        <!-- Public Board API test builds use a unique callback scheme so the OAuth return cannot
+             be intercepted by an installed official Lichess app, which owns org.lichess.mobile://. -->
+        <activity
+            android:name="net.openid.appauth.RedirectUriReceiverActivity"
+            android:exported="true"
+            tools:node="merge">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="org.alexzander85.lichess.premove"
+                    android:host="oauth-callback" />
+            </intent-filter>
+        </activity>
+    </application>
 </manifest>
