@@ -17,7 +17,7 @@ dependencies:
   chessground:
     git:
       url: https://github.com/AlexZander85/flutter-chessground.git
-      ref: feature/multiple-premoves
+      ref: 895bb4da756a7137be289265f767ed455d9d3503
   clock: ^1.1.2
   collection: ^1.19.1
   connectivity_plus: ^7.3.1
@@ -99,8 +99,8 @@ dev_dependencies:
 
 flutter:
   # The following line ensures that the Material Icons font is
-  # included with the application, so that you can use the icons in
-  # the material Icons class.
+  # included with your application, so that you can use the icons in
+  # the Material Icons class.
   uses-material-design: true
 
   assets:
