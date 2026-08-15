@@ -37,12 +37,23 @@ jobs:
               raise SystemExit('expected abiFilters line not found')
           p.write_text(s.replace(old, new))
           PY
-      - name: Build ARM64 debug APK
-        run: flutter build apk --debug --target-platform android-arm64
+      - name: Build ARM64-only debug APK
+        run: flutter build apk --debug --target-platform android-arm64 --split-per-abi
+      - name: Verify APK contains only ARM64 native libraries
+        run: |
+          python3 - <<'PY'
+          import zipfile
+          apk = 'build/app/outputs/flutter-apk/app-arm64-v8a-debug.apk'
+          with zipfile.ZipFile(apk) as z:
+              abis = sorted({n.split('/')[1] for n in z.namelist() if n.startswith('lib/') and n.endswith('.so')})
+          print('Native ABIs:', abis)
+          if abis != ['arm64-v8a']:
+              raise SystemExit(f'expected ARM64 only, got {abis}')
+          PY
       - name: Upload ARM64 debug APK
         uses: actions/upload-artifact@v7
         with:
-          name: lichess-multiple-premoves-arm64-debug-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          name: lichess-multiple-premoves-arm64-only-debug-apk
+          path: build/app/outputs/flutter-apk/app-arm64-v8a-debug.apk
           if-no-files-found: error
           retention-days: 7
