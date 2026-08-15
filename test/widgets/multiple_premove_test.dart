@@ -3,12 +3,13 @@ import 'package:dartchess/dartchess.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lichess_mobile/src/widgets/board.dart';
 
-GameData _game(String fen, Side sideToMove) => GameData(
-  fen: fen,
-  playerSide: PlayerSide.white,
-  sideToMove: sideToMove,
-  validMoves: const <Square, Set<Square>>{},
-);
+GameData _game(String fen, Side sideToMove) =>
+    GameData(
+      fen: fen,
+      playerSide: PlayerSide.white,
+      sideToMove: sideToMove,
+      validMoves: const <Square, Set<Square>>{},
+    );
 
 NormalMove _move(Square from, Square to) => NormalMove(from: from, to: to);
 
