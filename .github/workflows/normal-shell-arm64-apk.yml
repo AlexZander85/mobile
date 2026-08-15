@@ -1,0 +1,72 @@
+name: Normal-shell public Board API ARM64 APK
+
+on: [push]
+
+permissions: read-all
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-java@v5
+        with:
+          java-version: 17
+          distribution: temurin
+      - uses: actions/checkout@v7.0.1
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          channel: stable
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Code generation
+        run: dart run build_runner build
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed lib test
+      - name: Analyze project
+        run: flutter analyze
+      - name: Run integration-sensitive tests
+        run: |
+          flutter test test/model/public_board_api/public_board_api_test.dart
+          flutter test test/model/settings/board_preferences_test.dart
+          flutter test test/view/auth/email_login_screen_test.dart
+      - name: Remove fixed ABI filters for split build
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('android/app/build.gradle.kts')
+          s = p.read_text()
+          line = '            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86_64")\n'
+          if line not in s:
+              raise SystemExit('expected abiFilters line not found')
+          p.write_text(s.replace(line, ''))
+          PY
+      - name: Build normal Lichess shell for production lichess.org
+        run: |
+          flutter build apk --debug \
+            --target lib/main.dart \
+            --dart-define=PUBLIC_BOARD_API_TEST=true \
+            --dart-define=LICHESS_HOST=lichess.org \
+            --dart-define=LICHESS_WS_HOST=socket.lichess.org \
+            --target-platform android-arm64 \
+            --split-per-abi
+      - name: Verify ARM64-only APK and public OAuth callback
+        run: |
+          python3 - <<'PY'
+          import zipfile
+          apk = 'build/app/outputs/flutter-apk/app-arm64-v8a-debug.apk'
+          with zipfile.ZipFile(apk) as z:
+              abis = sorted({n.split('/')[1] for n in z.namelist() if n.startswith('lib/') and n.endswith('.so')})
+          print('Native ABIs:', abis)
+          if abis != ['arm64-v8a']:
+              raise SystemExit(f'expected ARM64 only, got {abis}')
+          PY
+          grep -R "org.alexzander85.lichess.premove" build/app/intermediates/merged_manifests build/app/intermediates/packaged_manifests
+      - name: Upload normal-shell APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: lichess-multiple-premoves-normal-shell-arm64-debug-apk
+          path: build/app/outputs/flutter-apk/app-arm64-v8a-debug.apk
+          if-no-files-found: error
+          retention-days: 7
