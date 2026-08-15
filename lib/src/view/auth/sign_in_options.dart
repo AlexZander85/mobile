@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lichess_mobile/src/constants.dart';
 import 'package:lichess_mobile/src/model/auth/auth_controller.dart';
 import 'package:lichess_mobile/src/view/auth/email_login_screen.dart';
 import 'package:lichess_mobile/src/widgets/adaptive_action_sheet.dart';
@@ -7,7 +8,9 @@ import 'package:material_ui/material_ui.dart';
 /// Lets the user pick how to sign in, then starts the chosen flow.
 ///
 /// The OAuth browser flow is the default, but it is unreliable on some Android browsers and OEMs,
-/// hence the email login code alternative.
+/// hence the email login code alternative in the official mobile mode. Public fork builds cannot
+/// use the email-code flow because it mints the reserved signed `web:mobile` token, so they expose
+/// only the documented public OAuth PKCE flow.
 ///
 /// Failures of the browser flow are reported through [signInMutation], so callers are expected to
 /// already listen to it with `showSignInErrorSnackBar`.
@@ -28,13 +31,14 @@ Future<void> showSignInOptions(BuildContext context, WidgetRef ref) {
           }).ignore();
         },
       ),
-      BottomSheetAction(
-        makeLabel: (context) => const Text('Sign in with an email'),
-        leading: const Icon(Icons.mail_outline),
-        onPressed: () {
-          navigator.push(EmailLoginScreen.buildRoute());
-        },
-      ),
+      if (!kPublicBoardApiTest)
+        BottomSheetAction(
+          makeLabel: (context) => const Text('Sign in with an email'),
+          leading: const Icon(Icons.mail_outline),
+          onPressed: () {
+            navigator.push(EmailLoginScreen.buildRoute());
+          },
+        ),
     ],
   );
 }
