@@ -1,0 +1,23 @@
+name: Format public Board API source
+
+on: [push]
+
+permissions: read-all
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart format lib/src/view/public_board_api/public_board_api_test_screen.dart
+      - uses: actions/upload-artifact@v7
+        with:
+          name: formatted-public-board-api-screen
+          path: lib/src/view/public_board_api/public_board_api_test_screen.dart
+          retention-days: 1
