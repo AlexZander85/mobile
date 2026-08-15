@@ -3,9 +3,9 @@ import 'package:lichess_mobile/src/model/settings/board_preferences.dart';
 
 void main() {
   group('premove mode preference', () {
-    test('fresh defaults recommend multiple premoves', () {
-      expect(BoardPrefs.defaults.premoveMode, PremoveMode.multiple);
-      expect(BoardPrefs.defaults.premoveMode.maxCount, kMultiplePremoveLimit);
+    test('fresh defaults preserve single premove behaviour', () {
+      expect(BoardPrefs.defaults.premoveMode, PremoveMode.single);
+      expect(BoardPrefs.defaults.premoveMode.maxCount, 1);
     });
 
     test('old enabled premove preference migrates to single mode', () {
@@ -34,6 +34,7 @@ void main() {
       final prefs = BoardPrefs.defaults.copyWith(premoves: true, multiplePremoves: true);
 
       expect(prefs.premoveMode, PremoveMode.multiple);
+      expect(prefs.premoveMode.maxCount, kMultiplePremoveLimit);
     });
   });
 }
