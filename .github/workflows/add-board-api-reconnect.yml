@@ -1,0 +1,53 @@
+name: Add Board API reconnect
+
+on: [push]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: feature/multiple-premoves
+          fetch-depth: 0
+      - name: Add resilient Board API stream reconnect
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('lib/src/view/public_board_api/public_board_api_test_screen.dart')
+          s = p.read_text()
+
+          old = "  StreamSubscription<Map<String, dynamic>>? _streamSubscription;\n  ChessboardController? _controller;\n"
+          new = "  StreamSubscription<Map<String, dynamic>>? _streamSubscription;\n  Timer? _reconnectTimer;\n  ChessboardController? _controller;\n"
+          if old not in s: raise SystemExit('field anchor not found')
+          s = s.replace(old, new, 1)
+
+          old = "  @override\n  void initState() {\n    super.initState();\n    _streamSubscription = ref\n        .read(publicBoardApiRepositoryProvider)\n        .streamGame(widget.game.id)\n        .listen(_onBoardApiEvent, onError: _onStreamError, onDone: _onStreamDone);\n  }\n\n"
+          new = "  @override\n  void initState() {\n    super.initState();\n    _connectStream();\n  }\n\n  void _connectStream() {\n    _reconnectTimer?.cancel();\n    _reconnectTimer = null;\n    _streamSubscription?.cancel();\n    _streamSubscription = ref\n        .read(publicBoardApiRepositoryProvider)\n        .streamGame(widget.game.id)\n        .listen(_onBoardApiEvent, onError: _onStreamError, onDone: _onStreamDone);\n  }\n\n  void _scheduleReconnect() {\n    if (!mounted || _authoritative?.isPlaying == false || _reconnectTimer != null) return;\n    _reconnectTimer = Timer(const Duration(seconds: 2), () {\n      _reconnectTimer = null;\n      if (mounted) _connectStream();\n    });\n  }\n\n"
+          if old not in s: raise SystemExit('initState anchor not found')
+          s = s.replace(old, new, 1)
+
+          old = "  void _onBoardApiEvent(Map<String, dynamic> event) {\n    if (!mounted) return;\n    final type = event['type'];\n"
+          new = "  void _onBoardApiEvent(Map<String, dynamic> event) {\n    if (!mounted) return;\n    _reconnectTimer?.cancel();\n    _reconnectTimer = null;\n    final type = event['type'];\n"
+          if old not in s: raise SystemExit('event anchor not found')
+          s = s.replace(old, new, 1)
+
+          old = "  void _onStreamError(Object error, StackTrace stackTrace) {\n    if (!mounted) return;\n    setState(() => _error = 'Board API stream: $error');\n  }\n\n  void _onStreamDone() {\n    if (!mounted) return;\n    setState(() {\n      if (_authoritative?.isPlaying == true && _error == null) {\n        _error = 'Поток партии закрыт сервером.';\n      }\n    });\n  }\n\n  @override\n  void dispose() {\n    _streamSubscription?.cancel();\n    _controller?.dispose();\n"
+          new = "  void _onStreamError(Object error, StackTrace stackTrace) {\n    if (!mounted) return;\n    setState(() => _error = 'Соединение с партией потеряно. Переподключаюсь… ($error)');\n    _scheduleReconnect();\n  }\n\n  void _onStreamDone() {\n    if (!mounted || _authoritative?.isPlaying == false) return;\n    setState(() {\n      _error ??= 'Соединение с партией закрыто. Переподключаюсь…';\n    });\n    _scheduleReconnect();\n  }\n\n  @override\n  void dispose() {\n    _reconnectTimer?.cancel();\n    _streamSubscription?.cancel();\n    _controller?.dispose();\n"
+          if old not in s: raise SystemExit('stream/dispose anchor not found')
+          s = s.replace(old, new, 1)
+
+          p.write_text(s)
+          PY
+      - name: Commit patch
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/src/view/public_board_api/public_board_api_test_screen.dart
+          git commit -m "Reconnect public Board API game streams"
+          git push origin HEAD:feature/multiple-premoves
