@@ -48,7 +48,9 @@ class BoardWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final premoveMode = ref.watch(boardPreferencesProvider.select((prefs) => prefs.premoveMode));
+    final premoveMode = ref.watch(
+      boardPreferencesProvider.select((prefs) => prefs.premoveMode),
+    );
 
     // Keep an already queued line consistent with live preference changes. In
     // particular, disabling premoves must cancel a pending head immediately so it
@@ -56,15 +58,17 @@ class BoardWidget extends ConsumerWidget {
     // is handled by the controller: it keeps only the queue head and restores the
     // authoritative board; switching single -> multiple turns that head into the
     // first speculative preview move.
-    ref.listen(
-      boardPreferencesProvider.select((prefs) => prefs.premoveMode),
-      (previous, next) {
-        if (next == PremoveMode.disabled) controller.clearPremoves();
-        controller.maxPremoveCount = next.maxCount;
-      },
-    );
+    ref.listen(boardPreferencesProvider.select((prefs) => prefs.premoveMode), (
+      previous,
+      next,
+    ) {
+      if (next == PremoveMode.disabled) controller.clearPremoves();
+      controller.maxPremoveCount = next.maxCount;
+    });
 
-    controller.maxPremoveCount = settings.enablePremoves ? premoveMode.maxCount : 1;
+    controller.maxPremoveCount = settings.enablePremoves
+        ? premoveMode.maxCount
+        : 1;
 
     final board = Chessboard(
       key: boardKey,
@@ -77,7 +81,9 @@ class BoardWidget extends ConsumerWidget {
       settings: settings,
     );
 
-    final overlay = boardOverlay ?? (error != null ? _ErrorWidget(errorMessage: error!) : null);
+    final overlay =
+        boardOverlay ??
+        (error != null ? _ErrorWidget(errorMessage: error!) : null);
 
     if (overlay != null) {
       return Stack(
@@ -127,7 +133,11 @@ class _ErrorWidget extends StatelessWidget {
 /// the whole dependent queue is cleared. A promotion that needs user input also
 /// clears the tail because later premoves cannot safely depend on an unresolved
 /// promotion role.
-void tryExecutePremove(ChessboardController ctrl, Position position, void Function(Move) onMove) {
+void tryExecutePremove(
+  ChessboardController ctrl,
+  Position position,
+  void Function(Move) onMove,
+) {
   final premove = ctrl.premove;
   if (premove == null) return;
 
@@ -160,12 +170,18 @@ GameData buildGameData({
     fen: fen,
     playerSide: playerSide,
     sideToMove: position.turn,
-    validMoves: _makeLegalMoves(position, variant: variant, castlingMethod: castlingMethod),
+    validMoves: _makeLegalMoves(
+      position,
+      variant: variant,
+      castlingMethod: castlingMethod,
+    ),
     lastMove: lastMove,
     kingSquareInCheck: boardHighlights && position.isCheck
         ? position.board.kingOf(position.turn)
         : null,
-    validDropSquares: variant == Variant.crazyhouse ? position.legalDrops.squares.toSet() : null,
+    validDropSquares: variant == Variant.crazyhouse
+        ? position.legalDrops.squares.toSet()
+        : null,
   );
 }
 
