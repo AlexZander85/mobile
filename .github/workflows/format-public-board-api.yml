@@ -1,0 +1,49 @@
+name: Format public Board API source
+
+on: [push]
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: feature/multiple-premoves
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Format new Board API Dart sources
+        run: |
+          dart format \
+            lib/main_public_board_api.dart \
+            lib/src/constants.dart \
+            lib/src/model/auth/bearer.dart \
+            lib/src/model/auth/auth_repository.dart \
+            lib/src/model/public_board_api/public_board_api.dart \
+            lib/src/view/public_board_api/public_board_api_test_screen.dart \
+            test/model/public_board_api/public_board_api_test.dart
+      - name: Commit formatter output if needed
+        run: |
+          if git diff --quiet; then
+            echo 'Already formatted.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            lib/main_public_board_api.dart \
+            lib/src/constants.dart \
+            lib/src/model/auth/bearer.dart \
+            lib/src/model/auth/auth_repository.dart \
+            lib/src/model/public_board_api/public_board_api.dart \
+            lib/src/view/public_board_api/public_board_api_test_screen.dart \
+            test/model/public_board_api/public_board_api_test.dart
+          git commit -m 'Format public Board API test sources'
+          git push origin HEAD:feature/multiple-premoves
