@@ -19,185 +19,12 @@ jobs:
           flutter-version: '3.47.0'
           channel: stable
           cache: true
-      - name: Patch OAuth scopes, Board API controls and clocks
+      - name: Patch public game controls
+        env:
+          PATCH_B64: CmZyb20gcGF0aGxpYiBpbXBvcnQgUGF0aAoKcCA9IFBhdGgoJ2xpYi9zcmMvbW9kZWwvYXV0aC9hdXRoX3JlcG9zaXRvcnkuZGFydCcpCnMgPSBwLnJlYWRfdGV4dCgpCm9sZCA9ICJjb25zdCBvYXV0aFNjb3BlcyA9IGtQdWJsaWNCb2FyZEFwaVRlc3QgPyBbJ2JvYXJkOnBsYXknXSA6IFsnd2ViOm1vYmlsZSddOyIKbmV3ID0gIiIiY29uc3Qgb2F1dGhTY29wZXMgPSBrUHVibGljQm9hcmRBcGlUZXN0CiAgICA/IFsnYm9hcmQ6cGxheScsICdwcmVmZXJlbmNlOnJlYWQnXQogICAgOiBbJ3dlYjptb2JpbGUnXTsiIiIKaWYgb2xkIG5vdCBpbiBzOgogICAgcmFpc2UgU3lzdGVtRXhpdCgnb2F1dGhTY29wZXMgYW5jaG9yIG5vdCBmb3VuZCcpCnAud3JpdGVfdGV4dChzLnJlcGxhY2Uob2xkLCBuZXcsIDEpKQoKcCA9IFBhdGgoJ2xpYi9zcmMvbW9kZWwvcHVibGljX2JvYXJkX2FwaS9wdWJsaWNfYm9hcmRfYXBpLmRhcnQnKQpzID0gcC5yZWFkX3RleHQoKQpvbGQgPSAiIiIgIEZ1dHVyZTx2b2lkPiBwbGF5TW92ZShTdHJpbmcgZ2FtZUlkLCBNb3ZlIG1vdmUpIGFzeW5jIHsKICAgIC8vIExpY2hlc3MgQm9hcmQgQVBJIHVzZXMgQ2hlc3M5NjAtY29tcGF0aWJsZSBjYXN0bGluZyBub3RhdGlvbiAoa2luZyB0YWtlcyByb29rKSwgZXZlbiBmb3IKICAgIC8vIHN0YW5kYXJkIGNoZXNzLiBUaGUgaGVscGVyIGNvbnZlcnRzIGUxZzEvZTFjMSBzdHlsZSBtb3ZlcyB3aGVuIG5lY2Vzc2FyeS4KICAgIGZpbmFsIHVjaSA9IG5vcm1hbGl6ZVVjaShtb3ZlLnVjaSk7CiAgICBhd2FpdCBjbGllbnQucG9zdFJlYWQoVXJpKHBhdGg6ICcvYXBpL2JvYXJkL2dhbWUvJGdhbWVJZC9tb3ZlLyR1Y2knKSk7CiAgfQp9IiIiCm5ldyA9ICIiIiAgRnV0dXJlPHZvaWQ+IHBsYXlNb3ZlKFN0cmluZyBnYW1lSWQsIE1vdmUgbW92ZSkgYXN5bmMgewogICAgLy8gTGljaGVzcyBCb2FyZCBBUEkgdXNlcyBDaGVzczk2MC1jb21wYXRpYmxlIGNhc3RsaW5nIG5vdGF0aW9uIChraW5nIHRha2VzIHJvb2spLCBldmVuIGZvcgogICAgLy8gc3RhbmRhcmQgY2hlc3MuIFRoZSBoZWxwZXIgY29udmVydHMgZTFnMS9lMWMxIHN0eWxlIG1vdmVzIHdoZW4gbmVjZXNzYXJ5LgogICAgZmluYWwgdWNpID0gbm9ybWFsaXplVWNpKG1vdmUudWNpKTsKICAgIGF3YWl0IGNsaWVudC5wb3N0UmVhZChVcmkocGF0aDogJy9hcGkvYm9hcmQvZ2FtZS8kZ2FtZUlkL21vdmUvJHVjaScpKTsKICB9CgogIC8vLyBPZmZlcnMgYSBkcmF3LCBvciBhY2NlcHRzIHRoZSBvcHBvbmVudCdzIHBlbmRpbmcgZHJhdyBvZmZlci4KICBGdXR1cmU8dm9pZD4gb2ZmZXJPckFjY2VwdERyYXcoU3RyaW5nIGdhbWVJZCkgewogICAgcmV0dXJuIGNsaWVudC5wb3N0UmVhZChVcmkocGF0aDogJy9hcGkvYm9hcmQvZ2FtZS8kZ2FtZUlkL2RyYXcveWVzJykpOwogIH0KCiAgRnV0dXJlPHZvaWQ+IHJlc2lnbihTdHJpbmcgZ2FtZUlkKSB7CiAgICByZXR1cm4gY2xpZW50LnBvc3RSZWFkKFVyaShwYXRoOiAnL2FwaS9ib2FyZC9nYW1lLyRnYW1lSWQvcmVzaWduJykpOwogIH0KfSIiIgppZiBvbGQgbm90IGluIHM6CiAgICByYWlzZSBTeXN0ZW1FeGl0KCdyZXBvc2l0b3J5IHBsYXlNb3ZlIGFuY2hvciBub3QgZm91bmQnKQpwLndyaXRlX3RleHQocy5yZXBsYWNlKG9sZCwgbmV3LCAxKSkKCnAgPSBQYXRoKCdsaWIvc3JjL3ZpZXcvc2V0dGluZ3MvYm9hcmRfc2V0dGluZ3Nfc2NyZWVuLmRhcnQnKQpzID0gcC5yZWFkX3RleHQoKQphbmNob3IgPSAiaW1wb3J0ICdwYWNrYWdlOmxpY2hlc3NfbW9iaWxlL2wxMG4vbDEwbi5kYXJ0JztcbiIKaWYgInNyYy9jb25zdGFudHMuZGFydCIgbm90IGluIHM6CiAgICBpZiBhbmNob3Igbm90IGluIHM6CiAgICAgICAgcmFpc2UgU3lzdGVtRXhpdCgnYm9hcmQgc2V0dGluZ3MgaW1wb3J0IGFuY2hvciBub3QgZm91bmQnKQogICAgcyA9IHMucmVwbGFjZShhbmNob3IsIGFuY2hvciArICJpbXBvcnQgJ3BhY2thZ2U6bGljaGVzc19tb2JpbGUvc3JjL2NvbnN0YW50cy5kYXJ0JztcbiIsIDEpCm9sZCA9ICIiIiAgICBmaW5hbCBhY2NvdW50UHJlZnNFbmFibGVkID0KICAgICAgICBhY2NvdW50UHJlZnNBc3luYy5oYXNWYWx1ZSAmJiAhaXNMb2FkaW5nICYmIChhdXRoVXNlciA9PSBudWxsIHx8IGlzT25saW5lKTsiIiIKbmV3ID0gIiIiICAgIGZpbmFsIGFjY291bnRQcmVmc0VuYWJsZWQgPQogICAgICAgICFrUHVibGljQm9hcmRBcGlUZXN0ICYmCiAgICAgICAgYWNjb3VudFByZWZzQXN5bmMuaGFzVmFsdWUgJiYKICAgICAgICAhaXNMb2FkaW5nICYmCiAgICAgICAgKGF1dGhVc2VyID09IG51bGwgfHwgaXNPbmxpbmUpOyIiIgppZiBvbGQgbm90IGluIHM6CiAgICByYWlzZSBTeXN0ZW1FeGl0KCdhY2NvdW50UHJlZnNFbmFibGVkIGFuY2hvciBub3QgZm91bmQnKQpwLndyaXRlX3RleHQocy5yZXBsYWNlKG9sZCwgbmV3LCAxKSkKCnAgPSBQYXRoKCdsaWIvc3JjL3ZpZXcvcHVibGljX2JvYXJkX2FwaS9wdWJsaWNfYm9hcmRfYXBpX3Rlc3Rfc2NyZWVuLmRhcnQnKQpzID0gcC5yZWFkX3RleHQoKQoKb2xkID0gIiIiICBTdHJpbmc/IF92YXJpYW50S2V5OwogIFN0cmluZz8gX2Vycm9yOwogIGJvb2wgX3NlbmRpbmdNb3ZlID0gZmFsc2U7CiIiIgpuZXcgPSAiIiIgIFN0cmluZz8gX3ZhcmlhbnRLZXk7CiAgU3RyaW5nPyBfZXJyb3I7CiAgRGF0ZVRpbWU/IF9hdXRob3JpdGF0aXZlUmVjZWl2ZWRBdDsKICBUaW1lcj8gX2Nsb2NrVGlja2VyOwogIGJvb2wgX3NlbmRpbmdNb3ZlID0gZmFsc2U7CiAgYm9vbCBfc2VuZGluZ0FjdGlvbiA9IGZhbHNlOwoiIiIKaWYgb2xkIG5vdCBpbiBzOgogICAgcmFpc2UgU3lzdGVtRXhpdCgnc2NyZWVuIGZpZWxkcyBhbmNob3Igbm90IGZvdW5kJykKcyA9IHMucmVwbGFjZShvbGQsIG5ldywgMSkKCm9sZCA9ICIiIiAgICBfYXV0aG9yaXRhdGl2ZSA9IGF1dGhvcml0YXRpdmU7CiAgICBpZiAoX2NvbnRyb2xsZXIgPT0gbnVsbCkgeyIiIgpuZXcgPSAiIiIgICAgX2F1dGhvcml0YXRpdmUgPSBhdXRob3JpdGF0aXZlOwogICAgX2F1dGhvcml0YXRpdmVSZWNlaXZlZEF0ID0gRGF0ZVRpbWUubm93KCk7CiAgICBpZiAoYXV0aG9yaXRhdGl2ZS5pc1BsYXlpbmcgJiYKICAgICAgICAoYXV0aG9yaXRhdGl2ZS53aGl0ZVRpbWVNcyAhPSBudWxsIHx8IGF1dGhvcml0YXRpdmUuYmxhY2tUaW1lTXMgIT0gbnVsbCkpIHsKICAgICAgX2Nsb2NrVGlja2VyID8/PSBUaW1lci5wZXJpb2RpYyhjb25zdCBEdXJhdGlvbihtaWxsaXNlY29uZHM6IDI1MCksIChfKSB7CiAgICAgICAgaWYgKG1vdW50ZWQgJiYgX2F1dGhvcml0YXRpdmU/LmlzUGxheWluZyA9PSB0cnVlKSBzZXRTdGF0ZSgoKSB7fSk7CiAgICAgIH0pOwogICAgfSBlbHNlIHsKICAgICAgX2Nsb2NrVGlja2VyPy5jYW5jZWwoKTsKICAgICAgX2Nsb2NrVGlja2VyID0gbnVsbDsKICAgIH0KICAgIGlmIChfY29udHJvbGxlciA9PSBudWxsKSB7IiIiCmlmIG9sZCBub3QgaW4gczoKICAgIHJhaXNlIFN5c3RlbUV4aXQoJ2F1dGhvcml0YXRpdmUgYW5jaG9yIG5vdCBmb3VuZCcpCnMgPSBzLnJlcGxhY2Uob2xkLCBuZXcsIDEpCgphbmNob3IgPSAiICB2b2lkIF9vblN0cmVhbUVycm9yKE9iamVjdCBlcnJvciwgU3RhY2tUcmFjZSBzdGFja1RyYWNlKSB7IgpoZWxwZXIgPSByIiIiICBpbnQ/IF9yZW1haW5pbmdDbG9ja01zKFNpZGUgc2lkZSkgewogICAgZmluYWwgYXV0aG9yaXRhdGl2ZSA9IF9hdXRob3JpdGF0aXZlOwogICAgaWYgKGF1dGhvcml0YXRpdmUgPT0gbnVsbCkgcmV0dXJuIG51bGw7CiAgICBmaW5hbCBiYXNlID0gc2lkZSA9PSBTaWRlLndoaXRlCiAgICAgICAgPyBhdXRob3JpdGF0aXZlLndoaXRlVGltZU1zCiAgICAgICAgOiBhdXRob3JpdGF0aXZlLmJsYWNrVGltZU1zOwogICAgaWYgKGJhc2UgPT0gbnVsbCkgcmV0dXJuIG51bGw7CiAgICBpZiAoIWF1dGhvcml0YXRpdmUuaXNQbGF5aW5nIHx8CiAgICAgICAgYXV0aG9yaXRhdGl2ZS5wb3NpdGlvbi50dXJuICE9IHNpZGUgfHwKICAgICAgICBfYXV0aG9yaXRhdGl2ZVJlY2VpdmVkQXQgPT0gbnVsbCkgewogICAgICByZXR1cm4gYmFzZTsKICAgIH0KICAgIGZpbmFsIGVsYXBzZWQgPSBEYXRlVGltZS5ub3coKS5kaWZmZXJlbmNlKF9hdXRob3JpdGF0aXZlUmVjZWl2ZWRBdCEpLmluTWlsbGlzZWNvbmRzOwogICAgcmV0dXJuIG1hdGgubWF4KDAsIGJhc2UgLSBlbGFwc2VkKS50b0ludCgpOwogIH0KCiAgU3RyaW5nIF9mb3JtYXRDbG9jayhpbnQ/IG1pbGxpc2Vjb25kcykgewogICAgaWYgKG1pbGxpc2Vjb25kcyA9PSBudWxsKSByZXR1cm4gJy0tOi0tJzsKICAgIGZpbmFsIHRvdGFsU2Vjb25kcyA9IChtaWxsaXNlY29uZHMgLyAxMDAwKS5jZWlsKCk7CiAgICBmaW5hbCBtaW51dGVzID0gdG90YWxTZWNvbmRzIH4vIDYwOwogICAgZmluYWwgc2Vjb25kcyA9IHRvdGFsU2Vjb25kcyAlIDYwOwogICAgcmV0dXJuICckbWludXRlczoke3NlY29uZHMudG9TdHJpbmcoKS5wYWRMZWZ0KDIsICcwJyl9JzsKICB9CgogIEZ1dHVyZTxib29sPiBfY29uZmlybUdhbWVBY3Rpb24oewogICAgcmVxdWlyZWQgU3RyaW5nIHRpdGxlLAogICAgcmVxdWlyZWQgU3RyaW5nIGJvZHksCiAgfSkgYXN5bmMgewogICAgaWYgKCFyZWYucmVhZChib2FyZFByZWZlcmVuY2VzUHJvdmlkZXIpLmNvbmZpcm1SZXNpZ25BbmREcmF3KSByZXR1cm4gdHJ1ZTsKICAgIHJldHVybiBhd2FpdCBzaG93RGlhbG9nPGJvb2w+KAogICAgICAgICAgY29udGV4dDogY29udGV4dCwKICAgICAgICAgIGJ1aWxkZXI6IChjb250ZXh0KSA9PiBBbGVydERpYWxvZygKICAgICAgICAgICAgdGl0bGU6IFRleHQodGl0bGUpLAogICAgICAgICAgICBjb250ZW50OiBUZXh0KGJvZHkpLAogICAgICAgICAgICBhY3Rpb25zOiBbCiAgICAgICAgICAgICAgVGV4dEJ1dHRvbigKICAgICAgICAgICAgICAgIG9uUHJlc3NlZDogKCkgPT4gTmF2aWdhdG9yLm9mKGNvbnRleHQpLnBvcChmYWxzZSksCiAgICAgICAgICAgICAgICBjaGlsZDogY29uc3QgVGV4dCgn0J7RgtC80LXQvdCwJyksCiAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICBGaWxsZWRCdXR0b24oCiAgICAgICAgICAgICAgICBvblByZXNzZWQ6ICgpID0+IE5hdmlnYXRvci5vZihjb250ZXh0KS5wb3AodHJ1ZSksCiAgICAgICAgICAgICAgICBjaGlsZDogY29uc3QgVGV4dCgn0J/QvtC00YLQstC10YDQtNC40YLRjCcpLAogICAgICAgICAgICAgICksCiAgICAgICAgICAgIF0sCiAgICAgICAgICApLAogICAgICAgICkgPz8KICAgICAgICBmYWxzZTsKICB9CgogIEZ1dHVyZTx2b2lkPiBfb2ZmZXJPckFjY2VwdERyYXcoKSBhc3luYyB7CiAgICBpZiAoX3NlbmRpbmdBY3Rpb24gfHwgX2F1dGhvcml0YXRpdmU/LmlzUGxheWluZyAhPSB0cnVlKSByZXR1cm47CiAgICBpZiAoIWF3YWl0IF9jb25maXJtR2FtZUFjdGlvbigKICAgICAgdGl0bGU6ICfQndC40YfRjNGPJywKICAgICAgYm9keTogJ9Cf0YDQtdC00LvQvtC20LjRgtGMINC90LjRh9GM0Y4g0YHQvtC/0LXRgNC90LjQutGDINC40LvQuCDQv9GA0LjQvdGP0YLRjCDQtdCz0L4g0YLQtdC60YPRidC10LUg0L/RgNC10LTQu9C+0LbQtdC90LjQtT8nLAogICAgKSkgewogICAgICByZXR1cm47CiAgICB9CiAgICBzZXRTdGF0ZSgoKSA9PiBfc2VuZGluZ0FjdGlvbiA9IHRydWUpOwogICAgdHJ5IHsKICAgICAgYXdhaXQgcmVmLnJlYWQocHVibGljQm9hcmRBcGlSZXBvc2l0b3J5UHJvdmlkZXIpLm9mZmVyT3JBY2NlcHREcmF3KHdpZGdldC5nYW1lLmlkKTsKICAgIH0gY2F0Y2ggKGUpIHsKICAgICAgaWYgKG1vdW50ZWQpIHNldFN0YXRlKCgpID0+IF9lcnJvciA9ICfQndC1INGD0LTQsNC70L7RgdGMINC+0YLQv9GA0LDQstC40YLRjCDQv9GA0LXQtNC70L7QttC10L3QuNC1INC90LjRh9GM0LXQuTogJGUnKTsKICAgIH0gZmluYWxseSB7CiAgICAgIGlmIChtb3VudGVkKSBzZXRTdGF0ZSgoKSA9PiBfc2VuZGluZ0FjdGlvbiA9IGZhbHNlKTsKICAgIH0KICB9CgogIEZ1dHVyZTx2b2lkPiBfcmVzaWduKCkgYXN5bmMgewogICAgaWYgKF9zZW5kaW5nQWN0aW9uIHx8IF9hdXRob3JpdGF0aXZlPy5pc1BsYXlpbmcgIT0gdHJ1ZSkgcmV0dXJuOwogICAgaWYgKCFhd2FpdCBfY29uZmlybUdhbWVBY3Rpb24oCiAgICAgIHRpdGxlOiAn0KHQtNCw0YLRjNGB0Y8/JywKICAgICAgYm9keTogJ9Cf0LDRgNGC0LjRjyDQsdGD0LTQtdGCINC90LXQvNC10LTQu9C10L3QvdC+INC30LDQstC10YDRiNC10L3QsCDQv9C+0YDQsNC20LXQvdC40LXQvC4nLAogICAgKSkgewogICAgICByZXR1cm47CiAgICB9CiAgICBzZXRTdGF0ZSgoKSA9PiBfc2VuZGluZ0FjdGlvbiA9IHRydWUpOwogICAgdHJ5IHsKICAgICAgYXdhaXQgcmVmLnJlYWQocHVibGljQm9hcmRBcGlSZXBvc2l0b3J5UHJvdmlkZXIpLnJlc2lnbih3aWRnZXQuZ2FtZS5pZCk7CiAgICB9IGNhdGNoIChlKSB7CiAgICAgIGlmIChtb3VudGVkKSBzZXRTdGF0ZSgoKSA9PiBfZXJyb3IgPSAn0J3QtSDRg9C00LDQu9C+0YHRjCDRgdC00LDRgtGM0YHRjzogJGUnKTsKICAgIH0gZmluYWxseSB7CiAgICAgIGlmIChtb3VudGVkKSBzZXRTdGF0ZSgoKSA9PiBfc2VuZGluZ0FjdGlvbiA9IGZhbHNlKTsKICAgIH0KICB9CgoiIiIKaWYgaGVscGVyLnN0cmlwKCkgaW4gczoKICAgIHJhaXNlIFN5c3RlbUV4aXQoJ3NjcmVlbiBoZWxwZXIgYWxyZWFkeSBwcmVzZW50JykKaWYgYW5jaG9yIG5vdCBpbiBzOgogICAgcmFpc2UgU3lzdGVtRXhpdCgnc3RyZWFtIGVycm9yIGFuY2hvciBub3QgZm91bmQnKQpzID0gcy5yZXBsYWNlKGFuY2hvciwgaGVscGVyICsgYW5jaG9yLCAxKQoKb2xkID0gIiIiICB2b2lkIGRpc3Bvc2UoKSB7CiAgICBfcmVjb25uZWN0VGltZXI/LmNhbmNlbCgpOwogICAgX3N0cmVhbVN1YnNjcmlwdGlvbj8uY2FuY2VsKCk7IiIiCm5ldyA9ICIiIiAgdm9pZCBkaXNwb3NlKCkgewogICAgX2Nsb2NrVGlja2VyPy5jYW5jZWwoKTsKICAgIF9yZWNvbm5lY3RUaW1lcj8uY2FuY2VsKCk7CiAgICBfc3RyZWFtU3Vic2NyaXB0aW9uPy5jYW5jZWwoKTsiIiIKaWYgb2xkIG5vdCBpbiBzOgogICAgcmFpc2UgU3lzdGVtRXhpdCgnZGlzcG9zZSBhbmNob3Igbm90IGZvdW5kJykKcyA9IHMucmVwbGFjZShvbGQsIG5ldywgMSkKCm9sZCA9ICIiIiAgICBmaW5hbCB2YXJpYW50ID0gVmFyaWFudC5uYW1lTWFwW3ZhcmlhbnRLZXldID8/IFZhcmlhbnQuc3RhbmRhcmQ7CgogICAgcmV0dXJuIFNjYWZmb2xkKAogICAgICBhcHBCYXI6IEFwcEJhcih0aXRsZTogVGV4dCgndnMgJHt3aWRnZXQuZ2FtZS5vcHBvbmVudE5hbWV9JykpLCIiIgpuZXcgPSAiIiIgICAgZmluYWwgdmFyaWFudCA9IFZhcmlhbnQubmFtZU1hcFt2YXJpYW50S2V5XSA/PyBWYXJpYW50LnN0YW5kYXJkOwogICAgZmluYWwgbXlTaWRlID0gd2lkZ2V0LmdhbWUuc2lkZTsKICAgIGZpbmFsIG9wcG9uZW50U2lkZSA9IG15U2lkZSA9PSBTaWRlLndoaXRlID8gU2lkZS5ibGFjayA6IFNpZGUud2hpdGU7CiAgICBmaW5hbCBhdXRob3JpdGF0aXZlID0gX2F1dGhvcml0YXRpdmU7CgogICAgcmV0dXJuIFNjYWZmb2xkKAogICAgICBhcHBCYXI6IEFwcEJhcigKICAgICAgICB0aXRsZTogVGV4dCgndnMgJHt3aWRnZXQuZ2FtZS5vcHBvbmVudE5hbWV9JyksCiAgICAgICAgYWN0aW9uczogWwogICAgICAgICAgaWYgKGF1dGhvcml0YXRpdmU/LmlzUGxheWluZyA9PSB0cnVlKQogICAgICAgICAgICBJY29uQnV0dG9uKAogICAgICAgICAgICAgIG9uUHJlc3NlZDogX3NlbmRpbmdBY3Rpb24gPyBudWxsIDogX29mZmVyT3JBY2NlcHREcmF3LAogICAgICAgICAgICAgIHRvb2x0aXA6ICfQn9GA0LXQtNC70L7QttC40YLRjCDQuNC70Lgg0L/RgNC40L3Rj9GC0Ywg0L3QuNGH0YzRjicsCiAgICAgICAgICAgICAgaWNvbjogY29uc3QgSWNvbihJY29ucy5oYW5kc2hha2Vfb3V0bGluZWQpLAogICAgICAgICAgICApLAogICAgICAgICAgaWYgKGF1dGhvcml0YXRpdmU/LmlzUGxheWluZyA9PSB0cnVlKQogICAgICAgICAgICBJY29uQnV0dG9uKAogICAgICAgICAgICAgIG9uUHJlc3NlZDogX3NlbmRpbmdBY3Rpb24gPyBudWxsIDogX3Jlc2lnbiwKICAgICAgICAgICAgICB0b29sdGlwOiAn0KHQtNCw0YLRjNGB0Y8nLAogICAgICAgICAgICAgIGljb246IGNvbnN0IEljb24oSWNvbnMuZmxhZ19vdXRsaW5lZCksCiAgICAgICAgICAgICksCiAgICAgICAgXSwKICAgICAgKSwiIiIKaWYgb2xkIG5vdCBpbiBzOgogICAgcmFpc2UgU3lzdGVtRXhpdCgnYnVpbGQvYXBwYmFyIGFuY2hvciBub3QgZm91bmQnKQpzID0gcy5yZXBsYWNlKG9sZCwgbmV3LCAxKQoKb2xkID0gIiIiICAgICAgICAgICAgICAgICAgTGF5b3V0QnVpbGRlcigKICAgICAgICAgICAgICAgICAgICBidWlsZGVyOiAoY29udGV4dCwgY29uc3RyYWludHMpIHsiIiIKbmV3ID0gIiIiICAgICAgICAgICAgICAgICAgX1B1YmxpY0dhbWVDbG9jaygKICAgICAgICAgICAgICAgICAgICBsYWJlbDogd2lkZ2V0LmdhbWUub3Bwb25lbnROYW1lLAogICAgICAgICAgICAgICAgICAgIHRpbWU6IF9mb3JtYXRDbG9jayhfcmVtYWluaW5nQ2xvY2tNcyhvcHBvbmVudFNpZGUpKSwKICAgICAgICAgICAgICAgICAgICBhY3RpdmU6CiAgICAgICAgICAgICAgICAgICAgICAgIGF1dGhvcml0YXRpdmU/LmlzUGxheWluZyA9PSB0cnVlICYmCiAgICAgICAgICAgICAgICAgICAgICAgIGF1dGhvcml0YXRpdmU/LnBvc2l0aW9uLnR1cm4gPT0gb3Bwb25lbnRTaWRlLAogICAgICAgICAgICAgICAgICApLAogICAgICAgICAgICAgICAgICBjb25zdCBTaXplZEJveChoZWlnaHQ6IDgpLAogICAgICAgICAgICAgICAgICBMYXlvdXRCdWlsZGVyKAogICAgICAgICAgICAgICAgICAgIGJ1aWxkZXI6IChjb250ZXh0LCBjb25zdHJhaW50cykgeyIiIgppZiBvbGQgbm90IGluIHM6CiAgICByYWlzZSBTeXN0ZW1FeGl0KCdib2FyZCBsYXlvdXQgYW5jaG9yIG5vdCBmb3VuZCcpCnMgPSBzLnJlcGxhY2Uob2xkLCBuZXcsIDEpCgpvbGQgPSAiIiIgICAgICAgICAgICAgICAgICBjb25zdCBTaXplZEJveChoZWlnaHQ6IDEyKSwKICAgICAgICAgICAgICAgICAgaWYgKHdpZGdldC5zaG93RGlhZ25vc3RpY3MpCiIiIgpuZXcgPSAiIiIgICAgICAgICAgICAgICAgICBjb25zdCBTaXplZEJveChoZWlnaHQ6IDgpLAogICAgICAgICAgICAgICAgICBfUHVibGljR2FtZUNsb2NrKAogICAgICAgICAgICAgICAgICAgIGxhYmVsOiAn0JLRiycsCiAgICAgICAgICAgICAgICAgICAgdGltZTogX2Zvcm1hdENsb2NrKF9yZW1haW5pbmdDbG9ja01zKG15U2lkZSkpLAogICAgICAgICAgICAgICAgICAgIGFjdGl2ZToKICAgICAgICAgICAgICAgICAgICAgICAgYXV0aG9yaXRhdGl2ZT8uaXNQbGF5aW5nID09IHRydWUgJiYKICAgICAgICAgICAgICAgICAgICAgICAgYXV0aG9yaXRhdGl2ZT8ucG9zaXRpb24udHVybiA9PSBteVNpZGUsCiAgICAgICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgICAgIGlmIChhdXRob3JpdGF0aXZlICE9IG51bGwgJiYgIWF1dGhvcml0YXRpdmUuaXNQbGF5aW5nKQogICAgICAgICAgICAgICAgICAgIFBhZGRpbmcoCiAgICAgICAgICAgICAgICAgICAgICBwYWRkaW5nOiBjb25zdCBFZGdlSW5zZXRzLmZyb21MVFJCKDE2LCAxMiwgMTYsIDApLAogICAgICAgICAgICAgICAgICAgICAgY2hpbGQ6IFRleHQoCiAgICAgICAgICAgICAgICAgICAgICAgICfQn9Cw0YDRgtC40Y8g0LfQsNCy0LXRgNGI0LXQvdCwIOKAoiAke2F1dGhvcml0YXRpdmUuc3RhdHVzfScsCiAgICAgICAgICAgICAgICAgICAgICAgIHRleHRBbGlnbjogVGV4dEFsaWduLmNlbnRlciwKICAgICAgICAgICAgICAgICAgICAgICAgc3R5bGU6IFRoZW1lLm9mKGNvbnRleHQpLnRleHRUaGVtZS50aXRsZU1lZGl1bSwKICAgICAgICAgICAgICAgICAgICAgICksCiAgICAgICAgICAgICAgICAgICAgKSwKICAgICAgICAgICAgICAgICAgY29uc3QgU2l6ZWRCb3goaGVpZ2h0OiAxMiksCiAgICAgICAgICAgICAgICAgIGlmICh3aWRnZXQuc2hvd0RpYWdub3N0aWNzKQoiIiIKaWYgb2xkIG5vdCBpbiBzOgogICAgcmFpc2UgU3lzdGVtRXhpdCgncG9zdC1ib2FyZCBhbmNob3Igbm90IGZvdW5kJykKcyA9IHMucmVwbGFjZShvbGQsIG5ldywgMSkKCmFuY2hvciA9ICJjbGFzcyBfUHJlbW92ZU1vZGVTZWxlY3RvciBleHRlbmRzIENvbnN1bWVyV2lkZ2V0IHsiCmNsb2NrX3dpZGdldCA9IHIiIiJjbGFzcyBfUHVibGljR2FtZUNsb2NrIGV4dGVuZHMgU3RhdGVsZXNzV2lkZ2V0IHsKICBjb25zdCBfUHVibGljR2FtZUNsb2NrKHsKICAgIHJlcXVpcmVkIHRoaXMubGFiZWwsCiAgICByZXF1aXJlZCB0aGlzLnRpbWUsCiAgICByZXF1aXJlZCB0aGlzLmFjdGl2ZSwKICB9KTsKCiAgZmluYWwgU3RyaW5nIGxhYmVsOwogIGZpbmFsIFN0cmluZyB0aW1lOwogIGZpbmFsIGJvb2wgYWN0aXZlOwoKICBAb3ZlcnJpZGUKICBXaWRnZXQgYnVpbGQoQnVpbGRDb250ZXh0IGNvbnRleHQpIHsKICAgIGZpbmFsIHRleHRTdHlsZSA9IFRoZW1lLm9mKGNvbnRleHQpLnRleHRUaGVtZS50aXRsZUxhcmdlPy5jb3B5V2l0aCgKICAgICAgZm9udFdlaWdodDogYWN0aXZlID8gRm9udFdlaWdodC5ib2xkIDogRm9udFdlaWdodC5ub3JtYWwsCiAgICApOwogICAgcmV0dXJuIFBhZGRpbmcoCiAgICAgIHBhZGRpbmc6IGNvbnN0IEVkZ2VJbnNldHMuc3ltbWV0cmljKGhvcml6b250YWw6IDE2KSwKICAgICAgY2hpbGQ6IFJvdygKICAgICAgICBjaGlsZHJlbjogWwogICAgICAgICAgRXhwYW5kZWQoCiAgICAgICAgICAgIGNoaWxkOiBUZXh0KGxhYmVsLCBtYXhMaW5lczogMSwgb3ZlcmZsb3c6IFRleHRPdmVyZmxvdy5lbGxpcHNpcyksCiAgICAgICAgICApLAogICAgICAgICAgVGV4dCh0aW1lLCBzdHlsZTogdGV4dFN0eWxlKSwKICAgICAgICBdLAogICAgICApLAogICAgKTsKICB9Cn0KCiIiIgppZiBhbmNob3Igbm90IGluIHM6CiAgICByYWlzZSBTeXN0ZW1FeGl0KCdwcmVtb3ZlIHNlbGVjdG9yIGFuY2hvciBub3QgZm91bmQnKQpzID0gcy5yZXBsYWNlKGFuY2hvciwgY2xvY2tfd2lkZ2V0ICsgYW5jaG9yLCAxKQpwLndyaXRlX3RleHQocykK
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-
-          # Normal-shell settings read/write the user's Lichess preferences, so request only the
-          # additional documented preference scopes needed by those existing screens.
-          p = Path('lib/src/model/auth/auth_repository.dart')
-          s = p.read_text()
-          old = "const oauthScopes = kPublicBoardApiTest ? ['board:play'] : ['web:mobile'];"
-          new = "const oauthScopes = kPublicBoardApiTest\n    ? ['board:play', 'preference:read', 'preference:write']\n    : ['web:mobile'];"
-          if old not in s: raise SystemExit('oauthScopes anchor not found')
-          p.write_text(s.replace(old, new, 1))
-
-          # Public Board API actions used by the normal-shell game screen.
-          p = Path('lib/src/model/public_board_api/public_board_api.dart')
-          s = p.read_text()
-          old = "  Future<void> playMove(String gameId, Move move) async {\n    // Lichess Board API uses Chess960-compatible castling notation (king takes rook), even for\n    // standard chess. The helper converts e1g1/e1c1 style moves when necessary.\n    final uci = normalizeUci(move.uci);\n    await client.postRead(Uri(path: '/api/board/game/$gameId/move/$uci'));\n  }\n}"
-          new = "  Future<void> playMove(String gameId, Move move) async {\n    // Lichess Board API uses Chess960-compatible castling notation (king takes rook), even for\n    // standard chess. The helper converts e1g1/e1c1 style moves when necessary.\n    final uci = normalizeUci(move.uci);\n    await client.postRead(Uri(path: '/api/board/game/$gameId/move/$uci'));\n  }\n\n  /// Offers a draw, or accepts the opponent's pending draw offer.\n  Future<void> offerOrAcceptDraw(String gameId) {\n    return client.postRead(Uri(path: '/api/board/game/$gameId/draw/yes'));\n  }\n\n  Future<void> resign(String gameId) {\n    return client.postRead(Uri(path: '/api/board/game/$gameId/resign'));\n  }\n}"
-          if old not in s: raise SystemExit('repository playMove anchor not found')
-          p.write_text(s.replace(old, new, 1))
-
-          p = Path('lib/src/view/public_board_api/public_board_api_test_screen.dart')
-          s = p.read_text()
-
-          old = "  String? _variantKey;\n  String? _error;\n  bool _sendingMove = false;\n"
-          new = "  String? _variantKey;\n  String? _error;\n  DateTime? _authoritativeReceivedAt;\n  Timer? _clockTicker;\n  bool _sendingMove = false;\n  bool _sendingAction = false;\n"
-          if old not in s: raise SystemExit('screen fields anchor not found')
-          s = s.replace(old, new, 1)
-
-          old = "    _authoritative = authoritative;\n    if (_controller == null) {"
-          new = "    _authoritative = authoritative;\n    _authoritativeReceivedAt = DateTime.now();\n    if (authoritative.isPlaying &&\n        (authoritative.whiteTimeMs != null || authoritative.blackTimeMs != null)) {\n      _clockTicker ??= Timer.periodic(const Duration(milliseconds: 250), (_) {\n        if (mounted && _authoritative?.isPlaying == true) setState(() {});\n      });\n    } else {\n      _clockTicker?.cancel();\n      _clockTicker = null;\n    }\n    if (_controller == null) {"
-          if old not in s: raise SystemExit('authoritative anchor not found')
-          s = s.replace(old, new, 1)
-
-          old = "  void _onStreamError(Object error, StackTrace stackTrace) {"
-          helper = """  int? _remainingClockMs(Side side) {
-    final authoritative = _authoritative;
-    if (authoritative == null) return null;
-    final base = side == Side.white
-        ? authoritative.whiteTimeMs
-        : authoritative.blackTimeMs;
-    if (base == null) return null;
-    if (!authoritative.isPlaying ||
-        authoritative.position.turn != side ||
-        _authoritativeReceivedAt == null) {
-      return base;
-    }
-    final elapsed = DateTime.now().difference(_authoritativeReceivedAt!).inMilliseconds;
-    return math.max(0, base - elapsed).toInt();
-  }
-
-  String _formatClock(int? milliseconds) {
-    if (milliseconds == null) return '--:--';
-    final totalSeconds = (milliseconds / 1000).ceil();
-    final minutes = totalSeconds ~/ 60;
-    final seconds = totalSeconds % 60;
-    return '$minutes:${seconds.toString().padLeft(2, '0')}';
-  }
-
-  Future<bool> _confirmGameAction({required String title, required String body}) async {
-    if (!ref.read(boardPreferencesProvider).confirmResignAndDraw) return true;
-    return await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text(title),
-            content: Text(body),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Отмена'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Подтвердить'),
-              ),
-            ],
-          ),
-        ) ??
-        false;
-  }
-
-  Future<void> _offerOrAcceptDraw() async {
-    if (_sendingAction || _authoritative?.isPlaying != true) return;
-    if (!await _confirmGameAction(
-      title: 'Ничья',
-      body: 'Предложить ничью сопернику или принять его текущее предложение?',
-    )) {
-      return;
-    }
-    setState(() => _sendingAction = true);
-    try {
-      await ref.read(publicBoardApiRepositoryProvider).offerOrAcceptDraw(widget.game.id);
-    } catch (e) {
-      if (mounted) setState(() => _error = 'Не удалось отправить предложение ничьей: $e');
-    } finally {
-      if (mounted) setState(() => _sendingAction = false);
-    }
-  }
-
-  Future<void> _resign() async {
-    if (_sendingAction || _authoritative?.isPlaying != true) return;
-    if (!await _confirmGameAction(
-      title: 'Сдаться?',
-      body: 'Партия будет немедленно завершена поражением.',
-    )) {
-      return;
-    }
-    setState(() => _sendingAction = true);
-    try {
-      await ref.read(publicBoardApiRepositoryProvider).resign(widget.game.id);
-    } catch (e) {
-      if (mounted) setState(() => _error = 'Не удалось сдаться: $e');
-    } finally {
-      if (mounted) setState(() => _sendingAction = false);
-    }
-  }
-
-"""
-          if helper.strip() in s: raise SystemExit('screen helper already present')
-          if old not in s: raise SystemExit('stream error anchor not found')
-          s = s.replace(old, helper + old, 1)
-
-          old = "  void dispose() {\n    _reconnectTimer?.cancel();\n    _streamSubscription?.cancel();"
-          new = "  void dispose() {\n    _clockTicker?.cancel();\n    _reconnectTimer?.cancel();\n    _streamSubscription?.cancel();"
-          if old not in s: raise SystemExit('dispose anchor not found')
-          s = s.replace(old, new, 1)
-
-          old = "    final variant = Variant.nameMap[variantKey] ?? Variant.standard;\n\n    return Scaffold(\n      appBar: AppBar(title: Text('vs ${widget.game.opponentName}')),"
-          new = "    final variant = Variant.nameMap[variantKey] ?? Variant.standard;\n    final mySide = widget.game.side;\n    final opponentSide = mySide == Side.white ? Side.black : Side.white;\n    final authoritative = _authoritative;\n\n    return Scaffold(\n      appBar: AppBar(\n        title: Text('vs ${widget.game.opponentName}'),\n        actions: [\n          if (authoritative?.isPlaying == true)\n            IconButton(\n              onPressed: _sendingAction ? null : _offerOrAcceptDraw,\n              tooltip: 'Предложить или принять ничью',\n              icon: const Icon(Icons.handshake_outlined),\n            ),\n          if (authoritative?.isPlaying == true)\n            IconButton(\n              onPressed: _sendingAction ? null : _resign,\n              tooltip: 'Сдаться',\n              icon: const Icon(Icons.flag_outlined),\n            ),\n        ],\n      ),"
-          if old not in s: raise SystemExit('build/appbar anchor not found')
-          s = s.replace(old, new, 1)
-
-          old = "                  LayoutBuilder(\n                    builder: (context, constraints) {"
-          new = "                  _PublicGameClock(\n                    label: widget.game.opponentName,\n                    time: _formatClock(_remainingClockMs(opponentSide)),\n                    active: authoritative?.isPlaying == true &&\n                        authoritative?.position.turn == opponentSide,\n                  ),\n                  const SizedBox(height: 8),\n                  LayoutBuilder(\n                    builder: (context, constraints) {"
-          if old not in s: raise SystemExit('board layout anchor not found')
-          s = s.replace(old, new, 1)
-
-          old = "                  const SizedBox(height: 12),\n                  if (widget.showDiagnostics)\n"
-          new = "                  const SizedBox(height: 8),\n                  _PublicGameClock(\n                    label: 'Вы',\n                    time: _formatClock(_remainingClockMs(mySide)),\n                    active: authoritative?.isPlaying == true &&\n                        authoritative?.position.turn == mySide,\n                  ),\n                  if (authoritative != null && !authoritative.isPlaying)\n                    Padding(\n                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),\n                      child: Text(\n                        'Партия завершена • ${authoritative.status}',\n                        textAlign: TextAlign.center,\n                        style: Theme.of(context).textTheme.titleMedium,\n                      ),\n                    ),\n                  const SizedBox(height: 12),\n                  if (widget.showDiagnostics)\n"
-          if old not in s: raise SystemExit('post-board anchor not found')
-          s = s.replace(old, new, 1)
-
-          anchor = "class _PremoveModeSelector extends ConsumerWidget {"
-          clock_widget = """class _PublicGameClock extends StatelessWidget {
-  const _PublicGameClock({required this.label, required this.time, required this.active});
-
-  final String label;
-  final String time;
-  final bool active;
-
-  @override
-  Widget build(BuildContext context) {
-    final textStyle = Theme.of(context).textTheme.titleLarge?.copyWith(
-      fontFeatures: const [FontFeature.tabularFigures()],
-      fontWeight: active ? FontWeight.bold : FontWeight.normal,
-    );
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
-          ),
-          Text(time, style: textStyle),
-        ],
-      ),
-    );
-  }
-}
-
-"""
-          # FontFeature lives in dart:ui; avoid adding an import by not using it if import absent.
-          clock_widget = clock_widget.replace("      fontFeatures: const [FontFeature.tabularFigures()],\n", "")
-          if anchor not in s: raise SystemExit('premove selector anchor not found')
-          s = s.replace(anchor, clock_widget + anchor, 1)
-
-          p.write_text(s)
-          PY
+          echo "$PATCH_B64" | base64 -d > /tmp/patch.py
+          python3 /tmp/patch.py
       - name: Install dependencies
         run: flutter pub get
       - name: Format
@@ -205,6 +32,7 @@ jobs:
           dart format \
             lib/src/model/auth/auth_repository.dart \
             lib/src/model/public_board_api/public_board_api.dart \
+            lib/src/view/settings/board_settings_screen.dart \
             lib/src/view/public_board_api/public_board_api_test_screen.dart
       - name: Analyze
         run: flutter analyze
@@ -221,6 +49,7 @@ jobs:
           git add \
             lib/src/model/auth/auth_repository.dart \
             lib/src/model/public_board_api/public_board_api.dart \
+            lib/src/view/settings/board_settings_screen.dart \
             lib/src/view/public_board_api/public_board_api_test_screen.dart
           git commit -m "Add public Board API game controls and clocks"
           git push origin HEAD:feature/multiple-premoves
