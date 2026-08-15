@@ -17,7 +17,7 @@ dependencies:
   chessground:
     git:
       url: https://github.com/AlexZander85/flutter-chessground.git
-      ref: 895bb4da756a7137be289265f767ed455d9d3503
+      ref: cb95459a4e5771bfbc7e7db2c477f6a319ab81bc
   clock: ^1.1.2
   collection: ^1.19.1
   connectivity_plus: ^7.3.1
