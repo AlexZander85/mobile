@@ -1,0 +1,214 @@
+name: Integrate public Board API lobby matchmaking
+
+on: [push]
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: feature/multiple-premoves
+          fetch-depth: 0
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          channel: stable
+          cache: true
+      - name: Add public matchmaking path
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('lib/src/model/lobby/create_game_service.dart')
+          s = p.read_text()
+
+          anchor = "import 'package:flutter_riverpod/flutter_riverpod.dart';\n"
+          if "src/constants.dart" not in s:
+              if anchor not in s: raise SystemExit('constants import anchor not found')
+              s = s.replace(anchor, anchor + "import 'package:lichess_mobile/src/constants.dart';\n", 1)
+
+          anchor = "  (StreamSubscription<SocketEvent>, Completer<GameSeekResponse>)? _lobbyConnection;\n"
+          insert = anchor + "\n  /// Pending public Board API seek. Unlike the official mobile path this does not rely on the\n  /// private lobby socket for the redirect event.\n  Completer<GameSeekResponse>? _publicLobbySeek;\n"
+          if "Completer<GameSeekResponse>? _publicLobbySeek;" not in s:
+              if anchor not in s: raise SystemExit('public seek field anchor not found')
+              s = s.replace(anchor, insert, 1)
+
+          anchor = "  Future<GameSeekResponse> newLobbyGame(GameSeek seek) async {\n    ref.read(recentGameSeekProvider.notifier).addSeek(seek);\n"
+          repl = anchor + "    if (kPublicBoardApiTest) {\n      return _newPublicBoardApiLobbyGame(seek);\n    }\n"
+          if "return _newPublicBoardApiLobbyGame(seek);" not in s:
+              if anchor not in s: raise SystemExit('newLobbyGame anchor not found')
+              s = s.replace(anchor, repl, 1)
+
+          anchor = "  /// Create a new correspondence game.\n"
+          helper = r'''  /// Creates a real-time lobby game using only the documented Board API.
+  ///
+  /// `POST /api/board/seek` is a streaming request: it completes when the player leaves the
+  /// matchmaking pool, including when a pairing has been made. The public API intentionally does
+  /// not send the official mobile socket's `redirect` payload, so after stream completion we
+  /// resolve the newly created game from `GET /api/account/playing`.
+  Future<GameSeekResponse> _newPublicBoardApiLobbyGame(GameSeek seek) {
+    if (_publicLobbySeek != null) {
+      throw StateError('Already creating a game.');
+    }
+
+    final completer = Completer<GameSeekResponse>();
+    _publicLobbySeek = completer;
+    unawaited(_performPublicBoardApiLobbySeek(seek, completer));
+    return completer.future.whenComplete(() {
+      if (identical(_publicLobbySeek, completer)) {
+        _publicLobbySeek = null;
+      }
+    });
+  }
+
+  Future<void> _performPublicBoardApiLobbySeek(
+    GameSeek seek,
+    Completer<GameSeekResponse> completer,
+  ) async {
+    try {
+      GameSeek actualSeek = seek;
+      if (seek.ratingDelta != null) {
+        final account = await ref.read(accountProvider.future);
+        if (account != null) actualSeek = actualSeek.withRatingRangeOf(account);
+      }
+
+      final accountRepository = ref.read(accountRepositoryProvider);
+      final gamesBefore = await accountRepository.getOngoingGames(nb: 50);
+      final idsBefore = gamesBefore.map((game) => game.id.value).toSet();
+      if (completer.isCompleted) return;
+
+      _log.info('Creating public Board API lobby seek');
+      await LobbyRepository(lichessClient).createSeek(actualSeek, sri: sri);
+      if (completer.isCompleted) return;
+
+      // Pairing and the account-playing projection are updated asynchronously. Give the server a
+      // short bounded window to expose the new game instead of depending on a private socket event.
+      for (var attempt = 0; attempt < 40 && !completer.isCompleted; attempt++) {
+        final games = await accountRepository.getOngoingGames(nb: 50);
+        for (final game in games) {
+          if (!idsBefore.contains(game.id.value)) {
+            completer.complete(GameSeekCreated(fullId: game.fullId));
+            return;
+          }
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 250));
+      }
+
+      if (!completer.isCompleted) {
+        completer.completeError(
+          StateError('Board API matchmaking finished but the new game was not visible in time.'),
+        );
+      }
+    } catch (e, st) {
+      _log.warning('Failed to create public Board API lobby game', e, st);
+      if (!completer.isCompleted) completer.completeError(e, st);
+    }
+  }
+
+'''
+          if "_performPublicBoardApiLobbySeek" not in s:
+              if anchor not in s: raise SystemExit('helper insertion anchor not found')
+              s = s.replace(anchor, helper + anchor, 1)
+
+          old = "  Future<void> cancelSeek() async {\n    if (_lobbyConnection == null) return;\n"
+          new = "  Future<void> cancelSeek() async {\n    if (kPublicBoardApiTest && _publicLobbySeek != null) {\n      _log.info('Cancelling public Board API game creation');\n      await LobbyRepository(lichessClient).cancelSeek(sri: sri);\n      if (!_publicLobbySeek!.isCompleted) {\n        _publicLobbySeek!.complete(const GameSeekCancelled());\n      }\n      return;\n    }\n\n    if (_lobbyConnection == null) return;\n"
+          if "Cancelling public Board API game creation" not in s:
+              if old not in s: raise SystemExit('cancelSeek anchor not found')
+              s = s.replace(old, new, 1)
+
+          old = "  void dispose() {\n    _lobbyConnection?.$1.cancel();\n"
+          new = "  void dispose() {\n    final publicSeek = _publicLobbySeek;\n    if (publicSeek != null && !publicSeek.isCompleted) {\n      unawaited(LobbyRepository(lichessClient).cancelSeek(sri: sri).catchError((_) {}));\n      publicSeek.complete(const GameSeekCancelled());\n    }\n    _publicLobbySeek = null;\n    _lobbyConnection?.$1.cancel();\n"
+          if "final publicSeek = _publicLobbySeek;" not in s:
+              if old not in s: raise SystemExit('dispose anchor not found')
+              s = s.replace(old, new, 1)
+
+          p.write_text(s)
+          PY
+      - name: Add public matchmaking test
+        run: |
+          cat > test/model/lobby/create_game_service_public_board_api_test.dart <<'DART'
+          import 'package:flutter_test/flutter_test.dart';
+          import 'package:http/http.dart' as http;
+          import 'package:http/testing.dart';
+          import 'package:lichess_mobile/src/model/lobby/create_game_service.dart';
+          import 'package:lichess_mobile/src/model/lobby/game_seek.dart';
+          import 'package:lichess_mobile/src/network/http.dart';
+
+          import '../../network/fake_http_client_factory.dart';
+          import '../../test_container.dart';
+          import '../auth/fake_auth_storage.dart';
+
+          void main() {
+            TestWidgetsFlutterBinding.ensureInitialized();
+
+            test('public Board API seek resolves the new account game without a lobby socket', () async {
+              var playingReads = 0;
+              final requests = <http.Request>[];
+              final mockClient = MockClient((request) async {
+                requests.add(request);
+                if (request.method == 'GET' && request.url.path == '/api/account/playing') {
+                  playingReads++;
+                  if (playingReads == 1) return http.Response('{"nowPlaying":[]}', 200);
+                  return http.Response(
+                    '{"nowPlaying":[{'
+                    '"gameId":"abcd1234",'
+                    '"fullId":"abcd1234wxyz",'
+                    '"color":"white",'
+                    '"fen":"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",'
+                    '"perf":"rapid",'
+                    '"speed":"rapid",'
+                    '"variant":"standard",'
+                    '"isMyTurn":true'
+                    '}]}',
+                    200,
+                  );
+                }
+                if (request.method == 'POST' && request.url.path == '/api/board/seek') {
+                  return http.Response('', 200);
+                }
+                return http.Response('', 404);
+              });
+
+              final container = await makeContainer(
+                authUser: fakeAuthUser,
+                overrides: {
+                  httpClientFactoryProvider: httpClientFactoryProvider.overrideWith((ref) {
+                    return FakeHttpClientFactory(() => mockClient);
+                  }),
+                },
+              );
+              addTearDown(container.dispose);
+
+              final response = await container.read(createGameServiceProvider).newLobbyGame(
+                const GameSeek(clock: (Duration(minutes: 10), Duration.zero), rated: false),
+              );
+
+              expect(response, isA<GameSeekCreated>());
+              expect((response as GameSeekCreated).fullId.value, 'abcd1234wxyz');
+              expect(requests.any((r) => r.method == 'POST' && r.url.path == '/api/board/seek'), isTrue);
+            });
+          }
+          DART
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Code generation
+        run: dart run build_runner build
+      - name: Format
+        run: dart format lib/src/model/lobby/create_game_service.dart test/model/lobby/create_game_service_public_board_api_test.dart
+      - name: Analyze
+        run: flutter analyze
+      - name: Public matchmaking tests
+        run: |
+          flutter test --dart-define=PUBLIC_BOARD_API_TEST=true test/model/lobby/create_game_service_public_board_api_test.dart
+          flutter test --dart-define=PUBLIC_BOARD_API_TEST=true test/model/lobby/create_game_service_test.dart
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/src/model/lobby/create_game_service.dart test/model/lobby/create_game_service_public_board_api_test.dart
+          git commit -m 'Use public Board API for fork lobby matchmaking'
+          git push origin HEAD:feature/multiple-premoves
