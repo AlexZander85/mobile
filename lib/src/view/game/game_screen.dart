@@ -1,5 +1,6 @@
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lichess_mobile/src/constants.dart';
 import 'package:lichess_mobile/src/model/challenge/challenge.dart';
 import 'package:lichess_mobile/src/model/common/id.dart';
 import 'package:lichess_mobile/src/model/common/speed.dart';
@@ -21,6 +22,7 @@ import 'package:lichess_mobile/src/view/game/game_common_widgets.dart';
 import 'package:lichess_mobile/src/view/game/game_loading_board.dart';
 import 'package:lichess_mobile/src/view/game/game_screen_providers.dart';
 import 'package:lichess_mobile/src/view/game/watcher_list_bottom_sheet.dart';
+import 'package:lichess_mobile/src/view/public_board_api/public_board_api_game_loader_screen.dart';
 import 'package:lichess_mobile/src/widgets/adaptive_action_sheet.dart';
 import 'package:lichess_mobile/src/widgets/bottom_bar.dart';
 import 'package:lichess_mobile/src/widgets/feedback.dart';
@@ -51,6 +53,15 @@ class GameScreen extends ConsumerStatefulWidget {
     LoadingParam? loadingPosition,
     DateTime? lastMoveAt,
   }) {
+    // Public fork builds keep the normal application navigation, but active games use the
+    // documented Board API instead of the official app's private `web:mobile` socket. Past games
+    // remain on the normal read-only screen.
+    if (kPublicBoardApiTest && lastMoveAt == null && source is ExistingGameSource) {
+      return buildScreenRoute(
+        screen: PublicBoardApiGameLoaderScreen(gameId: source.id.gameId.value),
+      );
+    }
+
     return buildScreenRoute(
       screen: GameScreen(source: source, loadingPosition: loadingPosition, lastMoveAt: lastMoveAt),
     );
@@ -151,6 +162,13 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           ),
         );
       case AsyncData(value: GameCreatedState(:final createdGameId)):
+        // A lobby seek completes inside this already-mounted GameScreen, so buildRoute cannot
+        // intercept it. In public fork mode hand the freshly paired game to the documented
+        // Board API transport here before any private /play/.../v6 controller is created.
+        if (kPublicBoardApiTest) {
+          return PublicBoardApiGameLoaderScreen(gameId: createdGameId.gameId.value);
+        }
+
         final isRealTimePlayingGame = ref.watch(
           _isRealTimePlayableGameProvider(createdGameId).select((s) => s.value ?? false),
         );

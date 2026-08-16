@@ -136,18 +136,23 @@ class _AppState extends ConsumerState<Application> {
   void initState() {
     _screenSizeBasedInitialization(ref);
 
-    // Start services
+    // Services that do not depend on the official mobile transport are safe in every build.
     ref.read(appLogServiceProvider).start();
-    ref.read(notificationServiceProvider).start();
-    ref.read(messageServiceProvider).start();
-    ref.read(challengeServiceProvider).start();
-    ref.read(accountServiceProvider).start();
-    ref.read(correspondenceServiceProvider).start();
-    ref.read(quickActionServiceProvider).start();
-    ref.read(announceServiceProvider).start();
     ref.read(appLinksServiceProvider).start();
     ref.read(sharedPgnServiceProvider).start();
-    ref.read(broadcastServiceProvider).start();
+
+    // The remaining services use the official mobile notification/socket infrastructure. Public
+    // fork builds intentionally leave them stopped and use OAuth + Board API for live games.
+    if (!kPublicBoardApiTest) {
+      ref.read(notificationServiceProvider).start();
+      ref.read(messageServiceProvider).start();
+      ref.read(challengeServiceProvider).start();
+      ref.read(accountServiceProvider).start();
+      ref.read(correspondenceServiceProvider).start();
+      ref.read(quickActionServiceProvider).start();
+      ref.read(announceServiceProvider).start();
+      ref.read(broadcastServiceProvider).start();
+    }
 
     if (Platform.isIOS) {
       HomeWidget.setAppGroupId(_kIosAppGroupId);
@@ -180,6 +185,7 @@ class _AppState extends ConsumerState<Application> {
 
     // Listen for connectivity changes and perform actions accordingly.
     ref.listenManual(connectivityChangesProvider, (prev, current) async {
+      if (kPublicBoardApiTest) return;
       final prevWasOffline = prev?.value?.isOnline == false;
       final currentIsOnline = current.value?.isOnline == true;
 

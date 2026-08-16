@@ -1,6 +1,18 @@
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 
+/// Builds a minimal production-compatible client using Lichess' public OAuth + Board API.
+///
+/// The official mobile app uses the concealed `web:mobile` OAuth scope and signs bearer tokens
+/// with a private deployment secret. Forks cannot legitimately use that secret. Enabling this flag
+/// switches authentication to a public PKCE client with `board:play`, and the application root to
+/// the dedicated Board API multiple-premove tester.
+const kPublicBoardApiTest = bool.fromEnvironment('PUBLIC_BOARD_API_TEST', defaultValue: false);
+
+const kPublicBoardApiOAuthClientId = 'alexzander85_lichess_multiple_premoves';
+const kPublicBoardApiRedirectScheme = 'org.alexzander85.lichess.premove';
+const kPublicBoardApiRedirectUri = '$kPublicBoardApiRedirectScheme://oauth-callback';
+
 const kLichessHost = String.fromEnvironment('LICHESS_HOST', defaultValue: 'lichess.dev');
 
 const kLichessWSHost = String.fromEnvironment(

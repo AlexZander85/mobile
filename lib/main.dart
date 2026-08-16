@@ -3,6 +3,7 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lichess_mobile/src/app.dart';
 import 'package:lichess_mobile/src/binding.dart';
+import 'package:lichess_mobile/src/constants.dart';
 import 'package:lichess_mobile/src/init.dart';
 import 'package:lichess_mobile/src/intl.dart';
 import 'package:lichess_mobile/src/model/common/service/sound_service.dart';
@@ -34,10 +35,12 @@ Future<void> main() async {
 
   final locale = await setupIntl(widgetsBinding);
 
-  await initializeLocalNotifications(locale);
+  if (!kPublicBoardApiTest) {
+    await initializeLocalNotifications(locale);
 
-  if (defaultTargetPlatform != TargetPlatform.linux) {
-    await lichessBinding.initializeFirebase();
+    if (defaultTargetPlatform != TargetPlatform.linux) {
+      await lichessBinding.initializeFirebase();
+    }
   }
 
   runApp(

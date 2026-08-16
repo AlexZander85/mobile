@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:deep_pick/deep_pick.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lichess_mobile/src/constants.dart';
 import 'package:lichess_mobile/src/model/account/account_repository.dart';
 import 'package:lichess_mobile/src/model/challenge/challenge.dart';
 import 'package:lichess_mobile/src/model/challenge/challenge_repository.dart';
@@ -41,6 +42,9 @@ class CreateGameService {
   /// The current lobby connection if we are creating a game from the lobby.
   (StreamSubscription<SocketEvent>, Completer<GameSeekResponse>)? _lobbyConnection;
 
+  /// Pending public Board API seek. It replaces the official lobby-socket redirect in fork mode.
+  Completer<GameSeekResponse>? _publicLobbySeek;
+
   /// The current challenge connection if we are creating a game from a challenge.
   (
     ChallengeId,
@@ -63,6 +67,9 @@ class CreateGameService {
   /// Create a new game from the lobby.
   Future<GameSeekResponse> newLobbyGame(GameSeek seek) async {
     ref.read(recentGameSeekProvider.notifier).addSeek(seek);
+    if (kPublicBoardApiTest) {
+      return _newPublicBoardApiLobbyGame(seek);
+    }
     if (_lobbyConnection != null) {
       throw StateError('Already creating a game.');
     }
@@ -109,6 +116,76 @@ class CreateGameService {
     }
 
     return completer.future;
+  }
+
+  /// Creates a real-time lobby game using only the documented Board API.
+  ///
+  /// `POST /api/board/seek` is a streaming request: it completes when the player leaves the
+  /// matchmaking pool, including when a pairing has been made. The public API intentionally does
+  /// not send the official mobile socket's `redirect` payload, so after stream completion we
+  /// resolve the newly created game from `GET /api/account/playing`.
+  Future<GameSeekResponse> _newPublicBoardApiLobbyGame(GameSeek seek) {
+    if (_publicLobbySeek != null) {
+      throw StateError('Already creating a game.');
+    }
+
+    // `createGameServiceProvider` is autoDispose. A plain `ref.read(...).newLobbyGame(...)` does not
+    // keep an autoDispose provider listened to while the Board API streaming seek is pending.
+    // Pin it for exactly the lifetime of this operation so async callbacks never outlive `ref`.
+    final keepAlive = ref.keepAlive();
+    final completer = Completer<GameSeekResponse>();
+    _publicLobbySeek = completer;
+    unawaited(_performPublicBoardApiLobbySeek(seek, completer));
+    return completer.future.whenComplete(() {
+      if (identical(_publicLobbySeek, completer)) {
+        _publicLobbySeek = null;
+      }
+      keepAlive.close();
+    });
+  }
+
+  Future<void> _performPublicBoardApiLobbySeek(
+    GameSeek seek,
+    Completer<GameSeekResponse> completer,
+  ) async {
+    try {
+      GameSeek actualSeek = seek;
+      if (seek.ratingDelta != null) {
+        final account = await ref.read(accountProvider.future);
+        if (account != null) actualSeek = actualSeek.withRatingRangeOf(account);
+      }
+
+      final accountRepository = ref.read(accountRepositoryProvider);
+      final gamesBefore = await accountRepository.getOngoingGames(nb: 50);
+      final idsBefore = gamesBefore.map((game) => game.id.value).toSet();
+      if (completer.isCompleted) return;
+
+      _log.info('Creating public Board API lobby seek');
+      await LobbyRepository(lichessClient).createSeek(actualSeek, sri: sri);
+      if (completer.isCompleted) return;
+
+      // Pairing and the account-playing projection are updated asynchronously. Give the server a
+      // short bounded window to expose the new game instead of depending on a private socket event.
+      for (var attempt = 0; attempt < 40 && !completer.isCompleted; attempt++) {
+        final games = await accountRepository.getOngoingGames(nb: 50);
+        for (final game in games) {
+          if (!idsBefore.contains(game.id.value)) {
+            completer.complete(GameSeekCreated(fullId: game.fullId));
+            return;
+          }
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 250));
+      }
+
+      if (!completer.isCompleted) {
+        completer.completeError(
+          StateError('Board API matchmaking finished but the new game was not visible in time.'),
+        );
+      }
+    } catch (e, st) {
+      _log.warning('Failed to create public Board API lobby game', e, st);
+      if (!completer.isCompleted) completer.completeError(e, st);
+    }
   }
 
   /// Create a new correspondence game.
@@ -276,6 +353,15 @@ class CreateGameService {
 
   /// Cancel the current game creation. No-op if no active lobby seek.
   Future<void> cancelSeek() async {
+    if (kPublicBoardApiTest && _publicLobbySeek != null) {
+      _log.info('Cancelling public Board API game creation');
+      await LobbyRepository(lichessClient).cancelSeek(sri: sri);
+      if (!_publicLobbySeek!.isCompleted) {
+        _publicLobbySeek!.complete(const GameSeekCancelled());
+      }
+      return;
+    }
+
     if (_lobbyConnection == null) return;
     _log.info('Cancelling game creation');
     try {
@@ -308,6 +394,13 @@ class CreateGameService {
 
   /// Dispose the service.
   void dispose() {
+    // Riverpod forbids reading ref from onDispose. Public seeks pin this provider with keepAlive;
+    // on forced shutdown simply complete the local future and let the HTTP client tear down.
+    final publicSeek = _publicLobbySeek;
+    if (publicSeek != null && !publicSeek.isCompleted) {
+      publicSeek.complete(const GameSeekCancelled());
+    }
+    _publicLobbySeek = null;
     _lobbyConnection?.$1.cancel();
     _lobbyConnection = null;
     _challengePingTimer?.cancel();
